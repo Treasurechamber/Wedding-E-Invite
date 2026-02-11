@@ -1,10 +1,14 @@
 "use client";
 
-import { Session } from "@supabase/supabase-js";
+import { createClient, Session } from "@supabase/supabase-js";
 import * as XLSX from "xlsx";
 import { LogIn, LogOut, Search, Download } from "lucide-react";
 import { useEffect, useState } from "react";
-import { supabase } from "../../lib/supabase";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+const supabase =
+  supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
 
 type RSVP = {
   id: string;
