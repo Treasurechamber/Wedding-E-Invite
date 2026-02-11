@@ -4,7 +4,7 @@ import { Session } from "@supabase/supabase-js";
 import * as XLSX from "xlsx";
 import { LogIn, LogOut, Search, Download } from "lucide-react";
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "../../lib/supabase";
 
 type RSVP = {
   id: string;
