@@ -1,11 +1,10 @@
 "use client";
 
-import { createClient, Session } from "@supabase/supabase-js";
+import { Session } from "@supabase/supabase-js";
+import * as XLSX from "xlsx";
 import { LogIn, LogOut, Search, Download } from "lucide-react";
 import { useEffect, useState } from "react";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+import { supabase } from "@/lib/supabase";
 
 type RSVP = {
   id: string;
@@ -31,11 +30,6 @@ export default function AdminPage() {
   const [rsvps, setRsvps] = useState<RSVP[]>([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "attending" | "declined">("all");
-
-  const supabase =
-    supabaseUrl && supabaseKey
-      ? createClient(supabaseUrl, supabaseKey)
-      : null;
 
   useEffect(() => {
     if (!supabase) return;
@@ -74,7 +68,10 @@ export default function AdminPage() {
     if (e) setError(e.message);
   };
 
-  const logout = () => supabase?.auth.signOut();
+  const logout = async () => {
+    await supabase?.auth.signOut();
+    setSession(null);
+  };
 
   const filtered = rsvps.filter((r) => {
     const matchSearch =
@@ -95,7 +92,7 @@ export default function AdminPage() {
     guests: rsvps.filter((r) => r.attending).reduce((s, r) => s + r.guest_count, 0),
   };
 
-  const exportCsv = () => {
+  const exportXlsx = () => {
     const headers = [
       "Name",
       "Email",
@@ -107,27 +104,21 @@ export default function AdminPage() {
       "Song",
       "Message",
     ];
-    const rows = filtered.map((r) =>
-      [
-        r.full_name,
-        r.email,
-        r.phone ?? "",
-        r.attending ? "Yes" : "No",
-        r.guest_count,
-        r.plus_one_name ?? "",
-        (r.dietary_restrictions ?? []).join("; "),
-        r.song_request ?? "",
-        (r.message ?? "").replace(/"/g, '""'),
-      ].map((c) => `"${c}"`).join(",")
-    );
-    const blob = new Blob([headers.join(",") + "\n" + rows.join("\n")], {
-      type: "text/csv",
-    });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "rsvps.csv";
-    a.click();
-    URL.revokeObjectURL(a.href);
+    const rows = filtered.map((r) => [
+      r.full_name,
+      r.email,
+      r.phone ?? "",
+      r.attending ? "Yes" : "No",
+      r.guest_count,
+      r.plus_one_name ?? "",
+      (r.dietary_restrictions ?? []).join("; "),
+      r.song_request ?? "",
+      r.message ?? "",
+    ]);
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "RSVPs");
+    XLSX.writeFile(wb, "rsvps.xlsx");
   };
 
   if (!supabase) {
@@ -224,10 +215,10 @@ export default function AdminPage() {
             <option value="declined">Declined</option>
           </select>
           <button
-            onClick={exportCsv}
+            onClick={exportXlsx}
             className="flex items-center gap-2 rounded-xl bg-gold-500 px-4 py-2 text-ink-900 transition hover:bg-gold-400"
           >
-            <Download className="h-4 w-4" /> Export CSV
+            <Download className="h-4 w-4" /> Export XLSX
           </button>
         </div>
 
