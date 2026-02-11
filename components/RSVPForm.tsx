@@ -35,9 +35,6 @@ export function RSVPForm() {
           attending: data.attending === "yes",
           guest_count: data.guestCount,
           plus_one_name: data.plusOneName || null,
-          dietary_restrictions: data.dietary,
-          dietary_notes: data.dietaryNotes || null,
-          song_request: data.songRequest || null,
           message: data.message || null,
         }),
       });
