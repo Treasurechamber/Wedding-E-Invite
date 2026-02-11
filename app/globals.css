@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: radial-gradient(circle at top, #020617 0, #020617 45%, #020617 100%);
+}
+
+.glass-surface {
+  @apply bg-ink-800/70 border border-white/10 shadow-xl shadow-black/40 backdrop-blur-xl;
+}
+

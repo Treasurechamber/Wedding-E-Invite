@@ -1,0 +1,286 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "Helvetica Neue", Arial, sans-serif;
+  background: radial-gradient(circle at top left, #111827 0, #030712 55%, #020617 100%);
+  color: #e5e7eb;
+}
+
+.page-root {
+  min-height: 100vh;
+  position: relative;
+}
+
+.envelope-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.envelope {
+  position: relative;
+  width: min(840px, 90vw);
+  height: min(520px, 80vh);
+  cursor: default;
+  perspective: 1200px;
+  filter: drop-shadow(0 32px 80px rgba(15, 23, 42, 0.8));
+  overflow: hidden;
+}
+
+.envelope--full {
+  max-width: 100%;
+}
+
+.envelope-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at top, rgba(248, 250, 252, 0.18), transparent 60%),
+    radial-gradient(circle at bottom, rgba(234, 179, 8, 0.08), transparent 65%),
+    #020617;
+  z-index: 20;
+}
+
+.glow-overlay {
+  position: absolute;
+  inset: 22% 24% 26%;
+  background:
+    radial-gradient(circle at 50% 80%, rgba(252, 211, 77, 1), transparent 55%),
+    linear-gradient(
+      75deg,
+      rgba(250, 250, 210, 0.45) 0%,
+      transparent 45%
+    ),
+    linear-gradient(
+      105deg,
+      rgba(250, 250, 210, 0.35) 0%,
+      transparent 45%
+    );
+  mix-blend-mode: screen;
+  pointer-events: none;
+  opacity: 0;
+  border-radius: 24px;
+  filter: blur(14px) brightness(1.6);
+  z-index: 1;
+}
+
+.envelope-body {
+  position: absolute;
+  inset: 18%;
+  background:
+    linear-gradient(145deg, rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.95)),
+    linear-gradient(120deg, rgba(248, 250, 252, 0.15), transparent 55%);
+  border-radius: 28px;
+  box-shadow:
+    0 18px 40px rgba(15, 23, 42, 0.85),
+    0 0 0 1px rgba(148, 163, 184, 0.55),
+    0 0 0 0.5px rgba(248, 250, 252, 0.2) inset;
+  z-index: 0;
+}
+
+.envelope-card {
+  position: absolute;
+  inset: 18% 18% 40%;
+  background: linear-gradient(145deg, #020617, #020617);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  transform-origin: top center;
+  backface-visibility: hidden;
+  box-shadow:
+    0 16px 40px rgba(15, 23, 42, 0.9),
+    0 0 0 1px rgba(30, 64, 175, 0.4);
+  z-index: 2;
+}
+
+.envelope-letter {
+  position: absolute;
+  inset: 22% 24% 22%;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 0 0, rgba(248, 250, 252, 0.22), transparent 55%),
+    rgba(15, 23, 42, 0.85);
+  box-shadow:
+    0 18px 45px rgba(15, 23, 42, 0.9),
+    0 0 0 1px rgba(148, 163, 184, 0.6);
+  padding: 40px 40px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.envelope-letter-heading {
+  font-family: "Cormorant Garamond", "Times New Roman", serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.85);
+  margin: 0 0 18px;
+}
+
+.envelope-letter-names {
+  font-family: "Great Vibes", "Zapfino", "Snell Roundhand", cursive;
+  font-size: clamp(2.6rem, 5vw, 3.4rem);
+  margin: 0;
+  color: #e5e7eb;
+  text-shadow: 0 10px 30px rgba(15, 23, 42, 0.9);
+}
+
+.wax-seal {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  transform: translate(-50%, -50%);
+  width: 88px;
+  height: 88px;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 30% 20%, #facc15, #eab308),
+    radial-gradient(circle at 70% 80%, #92400e, #713f12);
+  box-shadow:
+    0 16px 36px rgba(15, 23, 42, 0.8),
+    0 0 0 2px rgba(254, 249, 195, 0.85),
+    0 0 0 1px rgba(180, 83, 9, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition:
+    transform 220ms ease-out,
+    box-shadow 220ms ease-out;
+  z-index: 3;
+}
+
+.wax-seal:hover {
+  transform: translate(-50%, -52%) scale(1.04);
+  box-shadow:
+    0 20px 40px rgba(15, 23, 42, 0.95),
+    0 0 0 2px rgba(254, 249, 195, 0.95),
+    0 0 40px rgba(250, 204, 21, 0.9);
+}
+
+.wax-seal:active {
+  transform: translate(-50%, -48%) scale(0.97);
+}
+
+.wax-initials {
+  font-family: "Cormorant Garamond", "Times New Roman", serif;
+  font-size: 1.05rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(23, 23, 23, 0.9);
+}
+
+.envelope-caption {
+  position: absolute;
+  left: 50%;
+  bottom: -40px;
+  transform: translateX(-50%);
+  font-size: 0.78rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.8);
+}
+
+.invitation-scroll {
+  min-height: 100vh;
+  padding: 80px 24px 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.hero-section {
+  max-width: 720px;
+  text-align: center;
+  padding: 40px 24px 48px;
+  background:
+    radial-gradient(circle at top left, rgba(248, 250, 252, 0.12), transparent 55%),
+    rgba(15, 23, 42, 0.8);
+  border-radius: 28px;
+  box-shadow:
+    0 22px 70px rgba(15, 23, 42, 0.9),
+    0 0 0 1px rgba(30, 64, 175, 0.6);
+}
+
+.ceremonial-text {
+  font-family: "Cormorant Garamond", "Times New Roman", serif;
+  font-size: 1.1rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  color: rgba(156, 163, 175, 0.96);
+}
+
+.names {
+  font-family: "Great Vibes", "Zapfino", "Snell Roundhand", cursive;
+  font-size: clamp(2.8rem, 6vw, 4.4rem);
+  font-weight: 400;
+  margin: 0 0 10px;
+  color: #f9fafb;
+  text-shadow: 0 20px 40px rgba(15, 23, 42, 0.95);
+}
+
+.hero-subtitle,
+.hero-location {
+  margin: 4px 0;
+  font-size: 0.98rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hero-location {
+  color: rgba(229, 231, 235, 0.92);
+}
+
+.photo-section {
+  max-width: 900px;
+  margin-top: 72px;
+  text-align: center;
+}
+
+.photo-placeholder {
+  width: 100%;
+  border-radius: 20px;
+  background-image: linear-gradient(
+      120deg,
+      rgba(15, 23, 42, 0.5),
+      rgba(15, 23, 42, 0.1)
+    ),
+    url("https://images.pexels.com/photos/3951915/pexels-photo-3951915.jpeg?auto=compress&cs=tinysrgb&w=1600");
+  background-size: cover;
+  background-position: center;
+  padding-bottom: min(56%, 480px);
+  box-shadow:
+    0 30px 90px rgba(15, 23, 42, 0.95),
+    0 0 0 1px rgba(30, 64, 175, 0.5);
+}
+
+.photo-caption {
+  margin-top: 18px;
+  font-size: 0.95rem;
+  color: rgba(156, 163, 175, 0.9);
+}
+
+@media (max-width: 600px) {
+  .hero-section {
+    padding-inline: 18px;
+  }
+
+  .envelope-caption {
+    bottom: -32px;
+  }
+}
+
