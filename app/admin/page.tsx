@@ -1,6 +1,6 @@
 "use client";
 
-import { createClient } from "@supabase/supabase-js";
+import { createClient, Session } from "@supabase/supabase-js";
 import { LogIn, LogOut, Search, Download } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -23,7 +23,7 @@ type RSVP = {
 };
 
 export default function AdminPage() {
-  const [session, setSession] = useState<{ user: { email: string } } | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
