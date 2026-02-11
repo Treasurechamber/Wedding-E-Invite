@@ -2,23 +2,11 @@
 
 import { MapPin, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
-
-const CEREMONY = {
-  name: "Al Tawahin (Kalaa Weddings)",
-  time: "4:00 PM",
-  address: "Al Tawahin (Kalaa Weddings), القلعة، عين بعال",
-  mapUrl:
-    "https://www.google.com/maps/dir//Al+Tawahin+(+Kalaa+Weddings),+%D8%A7%D9%84%D9%82%D9%84%D8%B9%D8%A9%D8%8C+%D8%B9%D9%8A%D9%86+%D8%A8%D8%B9%D8%A7%D9%84%E2%80%AD/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x151e872e4159d141:0x9a73b3f4bea14c6c?sa=X&ved=1t:57443&ictx=111",
-};
-
-const RECEPTION = {
-  name: "Al Tawahin (Kalaa Weddings) – Grand Hall",
-  time: "6:00 PM",
-  address: "Al Tawahin (Kalaa Weddings), القلعة، عين بعال",
-  mapUrl: CEREMONY.mapUrl,
-};
+import { useContent } from "./ContentProvider";
 
 export function VenueSection() {
+  const content = useContent();
+  const { ceremony, reception, mapEmbedUrl } = content;
   return (
     <section className="relative py-20 md:py-28">
       <div className="mx-auto max-w-5xl px-4">
@@ -41,17 +29,17 @@ export function VenueSection() {
               Ceremony
             </p>
             <h3 className="mt-2 font-serif text-xl text-champagne-50">
-              {CEREMONY.name}
+              {ceremony.name}
             </h3>
             <p className="mt-2 font-sans text-sm text-slate-300">
-              {CEREMONY.time}
+              {ceremony.time}
             </p>
             <div className="mt-4 flex items-start gap-2 text-slate-400">
               <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
-              <span className="text-sm">{CEREMONY.address}</span>
+              <span className="text-sm">{ceremony.address}</span>
             </div>
             <a
-              href={CEREMONY.mapUrl}
+              href={ceremony.mapUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-6 inline-flex items-center gap-2 text-sm text-gold-400 transition hover:text-gold-300"
@@ -71,17 +59,17 @@ export function VenueSection() {
               Reception
             </p>
             <h3 className="mt-2 font-serif text-xl text-champagne-50">
-              {RECEPTION.name}
+              {reception.name}
             </h3>
             <p className="mt-2 font-sans text-sm text-slate-300">
-              {RECEPTION.time}
+              {reception.time}
             </p>
             <div className="mt-4 flex items-start gap-2 text-slate-400">
               <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
-              <span className="text-sm">{RECEPTION.address}</span>
+              <span className="text-sm">{reception.address}</span>
             </div>
             <a
-              href={RECEPTION.mapUrl}
+              href={reception.mapUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-6 inline-flex items-center gap-2 text-sm text-gold-400 transition hover:text-gold-300"
@@ -98,8 +86,8 @@ export function VenueSection() {
           className="mt-12 overflow-hidden rounded-2xl border border-white/10"
         >
           <iframe
-            title="Al Tawahin (Kalaa Weddings) map"
-            src="https://www.google.com/maps?q=Al+Tawahin+(Kalaa+Weddings),+%D8%A7%D9%84%D9%82%D9%84%D8%B9%D8%A9%D8%8C+%D8%B9%D9%8A%D9%86+%D8%A8%D8%B9%D8%A7%D9%84&output=embed"
+            title="Wedding venue map"
+            src={mapEmbedUrl || "https://www.google.com/maps?output=embed"}
             width="100%"
             height="320"
             style={{ border: 0 }}

@@ -10,30 +10,14 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { useContent } from "./ContentProvider";
 
-const EVENTS = [
-  { icon: Users, time: "3:30 PM", title: "Guest Arrival" },
-  { icon: Heart, time: "4:00 PM", title: "Ceremony" },
-  { icon: Wine, time: "5:00 PM", title: "Cocktail Hour" },
-  { icon: UtensilsCrossed, time: "6:00 PM", title: "Reception & Dinner" },
-  { icon: Music, time: "8:00 PM", title: "First Dance" },
-  { icon: Moon, time: "11:00 PM", title: "Last Dance" },
-];
-
-const VENUE_CARDS = [
-  {
-    title: "Garden Terrace",
-    subtitle: "Sunset Ceremony",
-    src: "/venue/k1.jpg",
-  },
-  {
-    title: "Grand Hall",
-    subtitle: "Reception & Dinner",
-    src: "/venue/k2.jpg",
-  },
-];
+const ICONS = [Users, Heart, Wine, UtensilsCrossed, Music, Moon];
 
 export function ScheduleSection() {
+  const content = useContent();
+  const events = content.events;
+  const venueCards = content.venueCards;
   return (
     <section className="relative py-20 md:py-28">
       <div className="mx-auto max-w-4xl px-4">
@@ -41,11 +25,13 @@ export function ScheduleSection() {
           Day of Events
         </h2>
         <p className="mt-3 font-serif text-sm tracking-[0.2em] text-slate-400">
-          Saturday, September 14, 2025
+          {content.weddingDateDisplay}
         </p>
 
         <div className="mt-14 max-w-2xl">
-          {EVENTS.map(({ icon: Icon, time, title }, i) => (
+          {events.map(({ time, title }, i) => {
+            const Icon = ICONS[i % ICONS.length];
+            return (
             <motion.div
               key={i}
               initial={{ opacity: 0, x: -20 }}
@@ -54,7 +40,7 @@ export function ScheduleSection() {
               transition={{ duration: 0.4, delay: i * 0.08 }}
               className="relative flex items-start gap-6 py-5"
             >
-              {i < EVENTS.length - 1 && (
+              {i < events.length - 1 && (
                 <div className="absolute left-5 top-14 bottom-0 w-px bg-gradient-to-b from-gold-500/50 to-transparent" />
               )}
               <div className="relative z-10 grid h-10 w-10 shrink-0 place-items-center rounded-full border border-gold-500/40 bg-ink-800/80">
@@ -67,7 +53,8 @@ export function ScheduleSection() {
                 </h3>
               </div>
             </motion.div>
-          ))}
+          );
+          })}
         </div>
 
         <motion.div
@@ -76,7 +63,7 @@ export function ScheduleSection() {
           viewport={{ once: true }}
           className="mt-14 grid gap-6 md:grid-cols-2"
         >
-          {VENUE_CARDS.map((card) => (
+          {venueCards.map((card) => (
             <div
               key={card.title}
               className="overflow-hidden rounded-2xl border border-white/10 bg-ink-800/60"

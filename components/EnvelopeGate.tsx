@@ -1,11 +1,13 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
+import { useContent } from "./ContentProvider";
 
 type EnvelopeGateProps = {
   onOpened: () => void;
 };
 
 export function EnvelopeGate({ onOpened }: EnvelopeGateProps) {
+  const content = useContent();
   const [phase, setPhase] = useState<"idle" | "opening" | "done">("idle");
 
   useEffect(() => {
@@ -85,7 +87,7 @@ export function EnvelopeGate({ onOpened }: EnvelopeGateProps) {
                 You are invited to the wedding of
               </p>
               <p className="font-script text-4xl md:text-5xl text-gold-400 drop-shadow-[0_12px_30px_rgba(0,0,0,0.9)]">
-                Sophia &amp; Alexander
+                {content.coupleNames}
               </p>
               <p className="mt-3 text-[0.65rem] tracking-[0.32em] uppercase text-slate-300/70">
                 Tap the seal to unfold
@@ -105,7 +107,7 @@ export function EnvelopeGate({ onOpened }: EnvelopeGateProps) {
                     "0 1px 0 rgba(255,255,255,0.85), 0 0 4px rgba(0,0,0,0.65)",
                 }}
               >
-                S&nbsp;&amp;&nbsp;A
+                {content.coupleInitials}
               </span>
             </button>
           </div>

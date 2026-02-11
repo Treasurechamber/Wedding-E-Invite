@@ -1,13 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useContent } from "./ContentProvider";
 
 const CLICKS_NEEDED = 3;
 const CLICK_WINDOW_MS = 1500;
 
 export function Footer() {
-  const router = useRouter();
+  const content = useContent();
   const [clicks, setClicks] = useState(0);
   const [timer, setTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
 
@@ -41,12 +41,12 @@ export function Footer() {
           type="button"
           onClick={handleInitialsClick}
           className="font-script text-2xl text-gold-400/80 transition hover:text-gold-400"
-          aria-label="Sophia and Alexander"
+          aria-label={content.coupleNames}
         >
-          Sophia &amp; Alexander
+          {content.coupleNames}
         </button>
         <p className="text-xs text-slate-500">
-          #SophiaAndAlexander2025
+          {content.hashtag}
         </p>
       </div>
     </footer>

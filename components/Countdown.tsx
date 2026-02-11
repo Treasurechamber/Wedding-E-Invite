@@ -2,10 +2,9 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { useContent } from "./ContentProvider";
 
-const WEDDING_DATE = new Date("2025-09-14T16:00:00");
-
-function useCountdown() {
+function useCountdown(weddingDate: string) {
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -13,7 +12,8 @@ function useCountdown() {
     return () => clearInterval(t);
   }, []);
 
-  const diff = Math.max(0, WEDDING_DATE.getTime() - now.getTime());
+  const target = new Date(weddingDate);
+  const diff = Math.max(0, target.getTime() - now.getTime());
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
   const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
@@ -42,7 +42,8 @@ function Block({ value, label }: { value: number; label: string }) {
 }
 
 export function Countdown() {
-  const { days, hours, minutes, seconds } = useCountdown();
+  const content = useContent();
+  const { days, hours, minutes, seconds } = useCountdown(content.weddingDate);
 
   return (
     <section className="relative py-20 md:py-28">

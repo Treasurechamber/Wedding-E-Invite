@@ -4,8 +4,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
+import { useContent } from "./ContentProvider";
 
-const SLIDES = [
+const FALLBACK_SLIDES = [
   "https://images.pexels.com/photos/265722/pexels-photo-265722.jpeg?auto=compress&cs=tinysrgb&w=1600",
   "https://images.pexels.com/photos/3951915/pexels-photo-3951915.jpeg?auto=compress&cs=tinysrgb&w=1600",
   "https://images.pexels.com/photos/265705/pexels-photo-265705.jpeg?auto=compress&cs=tinysrgb&w=1600",
@@ -14,15 +15,17 @@ const SLIDES = [
 ];
 
 export function HeroCarousel() {
+  const content = useContent();
+  const slides = content.heroSlides.length > 0 ? content.heroSlides : FALLBACK_SLIDES;
   const [index, setIndex] = useState(0);
 
   const next = useCallback(() => {
-    setIndex((i) => (i + 1) % SLIDES.length);
-  }, []);
+    setIndex((i) => (i + 1) % slides.length);
+  }, [slides.length]);
 
   const prev = useCallback(() => {
-    setIndex((i) => (i - 1 + SLIDES.length) % SLIDES.length);
-  }, []);
+    setIndex((i) => (i - 1 + slides.length) % slides.length);
+  }, [slides.length]);
 
   useEffect(() => {
     const t = setInterval(next, 5000);
@@ -41,7 +44,7 @@ export function HeroCarousel() {
           className="absolute inset-0"
         >
           <Image
-            src={SLIDES[index]}
+            src={slides[index]}
             alt="Wedding photo"
             fill
             className="object-cover"
@@ -60,10 +63,10 @@ export function HeroCarousel() {
           The wedding of
         </p>
         <h1 className="mt-2 font-script text-4xl text-gold-400 drop-shadow-[0_12px_32px_rgba(0,0,0,0.9)] md:text-[3.6rem]">
-          Sophia &amp; Alexander
+          {content.coupleNames}
         </h1>
         <p className="mt-4 font-serif text-sm tracking-[0.2em] uppercase text-slate-300/95">
-          September 14, 2025 · 4:00 PM
+          {content.weddingDateDisplay} · {content.weddingTime}
         </p>
       </div>
 
@@ -85,7 +88,7 @@ export function HeroCarousel() {
       </button>
 
       <div className="absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 gap-2">
-        {SLIDES.map((_, i) => (
+        {slides.map((_, i) => (
           <button
             key={i}
             type="button"

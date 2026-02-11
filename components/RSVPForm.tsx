@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Heart } from "lucide-react";
+import { useContent } from "./ContentProvider";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
 
@@ -16,6 +17,7 @@ type FormData = {
 };
 
 export function RSVPForm() {
+  const content = useContent();
   const [submitted, setSubmitted] = useState(false);
   const {
     register,
@@ -69,7 +71,7 @@ export function RSVPForm() {
           Kindly Respond
         </h2>
         <p className="mt-3 font-serif text-sm tracking-[0.2em] text-slate-400">
-          Please RSVP by August 1, 2025
+          Please RSVP by {content.rsvpDeadline}
         </p>
 
         <motion.form

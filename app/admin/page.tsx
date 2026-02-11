@@ -2,7 +2,8 @@
 
 import { createClient, Session } from "@supabase/supabase-js";
 import * as XLSX from "xlsx";
-import { LogIn, LogOut, Search, Download } from "lucide-react";
+import { LogIn, LogOut, Search, Download, FileText, Users } from "lucide-react";
+import { ContentEditor } from "./ContentEditor";
 import { useEffect, useState } from "react";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
@@ -34,6 +35,7 @@ export default function AdminPage() {
   const [rsvps, setRsvps] = useState<RSVP[]>([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "attending" | "declined">("all");
+  const [tab, setTab] = useState<"rsvps" | "content">("rsvps");
 
   useEffect(() => {
     if (!supabase) return;
@@ -170,15 +172,45 @@ export default function AdminPage() {
     <div className="min-h-screen bg-ink-900 p-4 md:p-8">
       <div className="mx-auto max-w-5xl">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <h1 className="font-script text-3xl text-gold-400">RSVP Dashboard</h1>
-          <button
-            onClick={logout}
-            className="flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2 text-sm text-slate-300 hover:bg-ink-800"
-          >
-            <LogOut className="h-4 w-4" /> Sign Out
-          </button>
+          <h1 className="font-script text-3xl text-gold-400">Admin</h1>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setTab("rsvps")}
+              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm transition ${
+                tab === "rsvps"
+                  ? "bg-gold-500 text-ink-900"
+                  : "border border-white/10 text-slate-300 hover:bg-ink-800"
+              }`}
+            >
+              <Users className="h-4 w-4" /> RSVPs
+            </button>
+            <button
+              onClick={() => setTab("content")}
+              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm transition ${
+                tab === "content"
+                  ? "bg-gold-500 text-ink-900"
+                  : "border border-white/10 text-slate-300 hover:bg-ink-800"
+              }`}
+            >
+              <FileText className="h-4 w-4" /> Content
+            </button>
+            <button
+              onClick={logout}
+              className="flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2 text-sm text-slate-300 hover:bg-ink-800"
+            >
+              <LogOut className="h-4 w-4" /> Sign Out
+            </button>
+          </div>
         </div>
 
+        {tab === "content" && (
+          <div className="mt-8">
+            <ContentEditor supabase={supabase} />
+          </div>
+        )}
+
+        {tab === "rsvps" && (
+          <>
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-xl border border-white/10 bg-ink-800/60 p-4">
             <p className="text-sm text-slate-400">Total RSVPs</p>
@@ -256,6 +288,8 @@ export default function AdminPage() {
             </tbody>
           </table>
         </div>
+          </>
+        )}
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Great_Vibes, Raleway } from "next/font/google";
 import "./globals.css";
+import { ContentProvider } from "../components/ContentProvider";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -34,7 +35,7 @@ export default function RootLayout({
       <body
         className={`${cormorant.variable} ${greatVibes.variable} ${raleway.variable} font-sans bg-ink-900 text-champagne-50`}
       >
-        {children}
+        <ContentProvider>{children}</ContentProvider>
       </body>
     </html>
   );
