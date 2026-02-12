@@ -12,8 +12,20 @@ function useCountdown(weddingDate: string) {
     return () => clearInterval(t);
   }, []);
 
-  const target = new Date(weddingDate);
-  const diff = Math.max(0, target.getTime() - now.getTime());
+  // Parse date - handle ISO (YYYY-MM-DD / YYYY-MM-DDTHH:mm:ss) and common formats
+  const target = (() => {
+    if (!weddingDate || typeof weddingDate !== "string") return null;
+    const s = weddingDate.trim();
+    // If YYYY-MM-DD without time, add default time
+    const toParse = /^\d{4}-\d{2}-\d{2}$/.test(s) ? `${s}T16:00:00` : s;
+    const d = new Date(toParse);
+    if (Number.isNaN(d.getTime())) return null;
+    return d;
+  })();
+
+  const diff = target
+    ? Math.max(0, target.getTime() - now.getTime())
+    : 0;
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
   const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
