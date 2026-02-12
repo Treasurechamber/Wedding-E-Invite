@@ -54,20 +54,23 @@ export function ContentEditor({ supabase }: ContentEditorProps) {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    supabase
-      .from("wedding_content")
-      .select("data")
-      .eq("id", "default")
-      .maybeSingle()
-      .then((res) => {
+    (async () => {
+      try {
+        const res = await supabase
+          .from("wedding_content")
+          .select("data")
+          .eq("id", "default")
+          .maybeSingle();
         const row = res.data as { data: WeddingContent } | null;
         if (row?.data) {
           setContent({ ...DEFAULT_CONTENT, ...row.data });
         } else {
           setContent(DEFAULT_CONTENT);
         }
-      })
-      .catch(() => setContent(DEFAULT_CONTENT));
+      } catch {
+        setContent(DEFAULT_CONTENT);
+      }
+    })();
   }, [supabase]);
 
   const save = async () => {
