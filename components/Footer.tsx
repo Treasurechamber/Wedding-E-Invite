@@ -6,6 +6,14 @@ import { useContent } from "./ContentProvider";
 const CLICKS_NEEDED = 3;
 const CLICK_WINDOW_MS = 1500;
 
+function hashtagFromNames(coupleNames: string, weddingDate?: string): string {
+  const year = weddingDate ? new Date(weddingDate).getFullYear() : new Date().getFullYear();
+  const base = coupleNames
+    .replace(/\s*&\s*/gi, "And")
+    .replace(/[^a-zA-Z0-9]/g, "");
+  return base ? `#${base}${year}` : "";
+}
+
 export function Footer() {
   const content = useContent();
   const [clicks, setClicks] = useState(0);
@@ -51,7 +59,7 @@ export function Footer() {
           {content.coupleNames}
         </button>
         <p className="text-xs text-slate-500">
-          {content.hashtag}
+          {hashtagFromNames(content.coupleNames, content.weddingDate) || content.hashtag}
         </p>
       </div>
     </footer>

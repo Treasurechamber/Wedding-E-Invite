@@ -7,6 +7,7 @@ import {
   useState,
   ReactNode,
 } from "react";
+import { usePathname } from "next/navigation";
 import type { WeddingContent } from "../lib/content-types";
 
 const defaultContent: WeddingContent = {
@@ -29,6 +30,7 @@ const ContentContext = createContext<WeddingContent>(defaultContent);
 
 export function ContentProvider({ children }: { children: ReactNode }) {
   const [content, setContent] = useState<WeddingContent>(defaultContent);
+  const pathname = usePathname();
 
   const fetchContent = () => {
     fetch(`/api/content?t=${Date.now()}`)
@@ -39,14 +41,19 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     fetchContent();
-    const interval = setInterval(fetchContent, 5000); // Refetch every 5 seconds
-    const onFocus = () => fetchContent(); // Refetch when tab becomes visible
+    const interval = setInterval(fetchContent, 3000); // Refetch every 3 seconds
+    const onFocus = () => fetchContent();
     window.addEventListener("visibilitychange", onFocus);
     return () => {
       clearInterval(interval);
       window.removeEventListener("visibilitychange", onFocus);
     };
   }, []);
+
+  // Refetch when navigating to home page (e.g. after editing in Dashboard)
+  useEffect(() => {
+    if (pathname === "/") fetchContent();
+  }, [pathname]);
 
   return (
     <ContentContext.Provider value={content}>{children}</ContentContext.Provider>
