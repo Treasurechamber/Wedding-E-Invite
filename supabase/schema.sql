@@ -27,6 +27,18 @@ CREATE POLICY "Authenticated users can view RSVPs"
   ON rsvps FOR SELECT
   USING (auth.role() = 'authenticated');
 
+-- Master users: only these emails can edit wedding content (separate from RSVP admin)
+CREATE TABLE IF NOT EXISTS master_users (
+  email TEXT PRIMARY KEY
+);
+ALTER TABLE master_users ENABLE ROW LEVEL SECURITY;
+-- Authenticated users can read (needed for "am I a master?" check)
+CREATE POLICY "Authenticated can read master_users"
+  ON master_users FOR SELECT
+  USING (auth.role() = 'authenticated');
+-- Add your email below (run this in Supabase SQL Editor after creating the table)
+-- INSERT INTO master_users (email) VALUES ('your-email@example.com');
+
 -- Wedding content (master content dashboard)
 CREATE TABLE IF NOT EXISTS wedding_content (
   id TEXT PRIMARY KEY DEFAULT 'default',
@@ -41,11 +53,23 @@ CREATE POLICY "Anyone can read wedding content"
   ON wedding_content FOR SELECT
   USING (true);
 
--- Only authenticated users can update
-CREATE POLICY "Authenticated users can update wedding content"
-  ON wedding_content FOR ALL
-  USING (auth.role() = 'authenticated')
-  WITH CHECK (auth.role() = 'authenticated');
+-- Only master users can update (couples with admin access cannot)
+CREATE POLICY "Only master users can update wedding content"
+  ON wedding_content FOR UPDATE
+  USING (
+    auth.role() = 'authenticated'
+    AND auth.jwt()->>'email' IN (SELECT email FROM master_users)
+  )
+  WITH CHECK (
+    auth.role() = 'authenticated'
+    AND auth.jwt()->>'email' IN (SELECT email FROM master_users)
+  );
+CREATE POLICY "Only master users can insert wedding content"
+  ON wedding_content FOR INSERT
+  WITH CHECK (
+    auth.role() = 'authenticated'
+    AND auth.jwt()->>'email' IN (SELECT email FROM master_users)
+  );
 
 -- Insert default content
 INSERT INTO wedding_content (id, data) VALUES ('default', '{

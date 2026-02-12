@@ -25,9 +25,14 @@ export function Footer() {
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "A") {
-        e.preventDefault();
-        window.open("/admin", "_blank");
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey) {
+        if (e.key === "A") {
+          e.preventDefault();
+          window.open("/admin", "_blank");
+        } else if (e.key === "M") {
+          e.preventDefault();
+          window.open("/master", "_blank");
+        }
       }
     };
     window.addEventListener("keydown", onKeyDown);
