@@ -142,6 +142,41 @@ export function ContentEditor({ supabase }: ContentEditorProps) {
         </p>
       )}
 
+      <div className="rounded-xl border-2 border-gold-500/30 bg-ink-800/60 p-6">
+        <h3 className="font-serif text-lg text-gold-400">📷 Hero Carousel Images</h3>
+        <p className="mt-1 text-sm text-slate-400">Click <strong className="text-gold-400">Browse / Upload</strong> to add photos from your computer, or paste image URLs.</p>
+        <div className="mt-3 space-y-3">
+          {content.heroSlides.map((url, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <ImageUpload
+                value={url}
+                onChange={(v) => {
+                  const next = [...content.heroSlides];
+                  next[i] = v;
+                  update("heroSlides", next);
+                }}
+                onUpload={(f) => uploadImage(f, "hero")}
+                placeholder="Slide"
+              />
+              <button
+                type="button"
+                onClick={() => update("heroSlides", content.heroSlides.filter((_, j) => j !== i))}
+                className="shrink-0 rounded px-2 py-1 text-xs text-amber-400 hover:bg-ink-800"
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => update("heroSlides", [...content.heroSlides, ""])}
+            className="rounded-lg border border-dashed border-white/20 px-4 py-2 text-sm text-slate-400 hover:border-gold-500/50 hover:text-gold-400"
+          >
+            + Add slide
+          </button>
+        </div>
+      </div>
+
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-4 rounded-xl border border-white/10 bg-ink-800/60 p-6">
           <h3 className="font-serif text-sm text-gold-400">Couple & Dates</h3>
@@ -170,9 +205,9 @@ export function ContentEditor({ supabase }: ContentEditorProps) {
         </div>
       </div>
 
-      <div className="rounded-xl border border-white/10 bg-ink-800/60 p-6">
-        <h3 className="font-serif text-sm text-gold-400">Hero Carousel Images</h3>
-        <p className="mt-1 text-xs text-slate-400">Browse to upload or paste URLs. Order = carousel order.</p>
+      <div className="rounded-xl border-2 border-gold-500/30 bg-ink-800/60 p-6">
+        <h3 className="font-serif text-lg text-gold-400">📷 Hero Carousel Images</h3>
+        <p className="mt-1 text-sm text-slate-400">Click <strong className="text-gold-400">Browse / Upload</strong> to add photos from your computer, or paste image URLs.</p>
         <div className="mt-3 space-y-3">
           {content.heroSlides.map((url, i) => (
             <div key={i} className="flex items-center gap-2">
