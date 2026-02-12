@@ -3,6 +3,47 @@
 import { useEffect, useState } from "react";
 import type { WeddingContent } from "../../lib/content-types";
 
+const DEFAULT_CONTENT: WeddingContent = {
+  coupleNames: "Sophia & Alexander",
+  coupleInitials: "S & A",
+  weddingDate: "2025-09-14T16:00:00",
+  weddingDateDisplay: "September 14, 2025",
+  weddingTime: "4:00 PM",
+  rsvpDeadline: "August 1, 2025",
+  hashtag: "#SophiaAndAlexander2025",
+  heroSlides: [
+    "https://images.pexels.com/photos/265722/pexels-photo-265722.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    "https://images.pexels.com/photos/3951915/pexels-photo-3951915.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    "https://images.pexels.com/photos/265705/pexels-photo-265705.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    "https://images.pexels.com/photos/3014856/pexels-photo-3014856.jpeg?auto=compress&cs=tinysrgb&w=1600",
+  ],
+  ceremony: {
+    name: "Al Tawahin (Kalaa Weddings)",
+    time: "4:00 PM",
+    address: "Al Tawahin (Kalaa Weddings), القلعة، عين بعال",
+    mapUrl: "https://www.google.com/maps/dir//Al+Tawahin+(+Kalaa+Weddings)",
+  },
+  reception: {
+    name: "Al Tawahin (Kalaa Weddings) – Grand Hall",
+    time: "6:00 PM",
+    address: "Al Tawahin (Kalaa Weddings), القلعة، عين بعال",
+    mapUrl: "https://www.google.com/maps/dir//Al+Tawahin+(+Kalaa+Weddings)",
+  },
+  events: [
+    { time: "3:30 PM", title: "Guest Arrival" },
+    { time: "4:00 PM", title: "Ceremony" },
+    { time: "5:00 PM", title: "Cocktail Hour" },
+    { time: "6:00 PM", title: "Reception & Dinner" },
+    { time: "8:00 PM", title: "First Dance" },
+    { time: "11:00 PM", title: "Last Dance" },
+  ],
+  venueCards: [
+    { title: "Garden Terrace", subtitle: "Sunset Ceremony", src: "/venue/k1.jpg" },
+    { title: "Grand Hall", subtitle: "Reception & Dinner", src: "/venue/k2.jpg" },
+  ],
+  mapEmbedUrl: "https://www.google.com/maps?q=Al+Tawahin+(Kalaa+Weddings)&output=embed",
+};
+
 type ContentEditorProps = {
   supabase: import("@supabase/supabase-js").SupabaseClient;
 };
@@ -20,8 +61,13 @@ export function ContentEditor({ supabase }: ContentEditorProps) {
       .maybeSingle()
       .then((res) => {
         const row = res.data as { data: WeddingContent } | null;
-        if (row?.data) setContent(row.data);
-      });
+        if (row?.data) {
+          setContent({ ...DEFAULT_CONTENT, ...row.data });
+        } else {
+          setContent(DEFAULT_CONTENT);
+        }
+      })
+      .catch(() => setContent(DEFAULT_CONTENT));
   }, [supabase]);
 
   const save = async () => {
