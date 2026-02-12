@@ -9,6 +9,7 @@ import {
 } from "react";
 import { usePathname } from "next/navigation";
 import type { WeddingContent } from "../lib/content-types";
+import { supabase } from "../lib/supabase";
 
 const defaultContent: WeddingContent = {
   coupleNames: "Sophia & Alexander",
@@ -32,16 +33,21 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   const [content, setContent] = useState<WeddingContent>(defaultContent);
   const pathname = usePathname();
 
-  const fetchContent = () => {
-    fetch(`/api/content?t=${Date.now()}`)
-      .then((r) => r.json())
-      .then((data) => setContent({ ...defaultContent, ...data }))
-      .catch(() => {});
+  const fetchContent = async () => {
+    if (!supabase) return;
+    const { data, error } = await supabase
+      .from("wedding_content")
+      .select("data")
+      .eq("id", "default")
+      .maybeSingle();
+    if (!error && data?.data) {
+      setContent({ ...defaultContent, ...(data.data as object) });
+    }
   };
 
   useEffect(() => {
     fetchContent();
-    const interval = setInterval(fetchContent, 3000); // Refetch every 3 seconds
+    const interval = setInterval(fetchContent, 3000);
     const onFocus = () => fetchContent();
     window.addEventListener("visibilitychange", onFocus);
     return () => {
@@ -50,7 +56,6 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  // Refetch when navigating to home page (e.g. after editing in Dashboard)
   useEffect(() => {
     if (pathname === "/") fetchContent();
   }, [pathname]);

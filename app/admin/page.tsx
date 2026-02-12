@@ -172,20 +172,12 @@ export default function AdminPage() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h1 className="font-script text-3xl text-gold-400">RSVP Admin</h1>
           <div className="flex items-center gap-3">
-            <a
-              href="/master"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-lg border border-gold-500/40 px-4 py-2 text-sm text-gold-400 hover:bg-gold-500/10"
+            <button
+              onClick={logout}
+              className="flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2 text-sm text-slate-300 hover:bg-ink-800"
             >
-              Edit content (hero & venue photos) →
-            </a>
-              <button
-            onClick={logout}
-            className="flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2 text-sm text-slate-300 hover:bg-ink-800"
-          >
-            <LogOut className="h-4 w-4" /> Sign Out
-          </button>
+              <LogOut className="h-4 w-4" /> Sign Out
+            </button>
           </div>
         </div>
 
