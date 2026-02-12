@@ -12,13 +12,18 @@ function useCountdown(weddingDate: string) {
     return () => clearInterval(t);
   }, []);
 
-  // Parse date - handle ISO (YYYY-MM-DD / YYYY-MM-DDTHH:mm:ss) and common formats
+  // Parse date - handle ISO, YYYY-MM-DD, and formats like "April 5, 2026"
   const target = (() => {
     if (!weddingDate || typeof weddingDate !== "string") return null;
     const s = weddingDate.trim();
-    // If YYYY-MM-DD without time, add default time
-    const toParse = /^\d{4}-\d{2}-\d{2}$/.test(s) ? `${s}T16:00:00` : s;
-    const d = new Date(toParse);
+    if (!s) return null;
+    // YYYY-MM-DD without time → add default time
+    let toParse = /^\d{4}-\d{2}-\d{2}$/.test(s) ? `${s}T16:00:00` : s;
+    let d = new Date(toParse);
+    // If that failed, try parsing as "Month DD, YYYY"
+    if (Number.isNaN(d.getTime()) && /^[A-Za-z]+\s+\d{1,2},?\s+\d{4}$/.test(s)) {
+      d = new Date(s);
+    }
     if (Number.isNaN(d.getTime())) return null;
     return d;
   })();
@@ -55,7 +60,9 @@ function Block({ value, label }: { value: number; label: string }) {
 
 export function Countdown() {
   const content = useContent();
-  const { days, hours, minutes, seconds } = useCountdown(content.weddingDate);
+  // Use weddingDate (ISO) first; fallback to weddingDateDisplay if weddingDate invalid
+  const dateStr = content.weddingDate || content.weddingDateDisplay || "";
+  const { days, hours, minutes, seconds } = useCountdown(dateStr);
 
   return (
     <section className="relative py-20 md:py-28">

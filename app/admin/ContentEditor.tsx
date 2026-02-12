@@ -160,7 +160,7 @@ export function ContentEditor({ supabase, accessToken }: ContentEditorProps) {
           <h3 className="font-serif text-sm text-gold-400">Couple & Dates</h3>
           <Field label="Couple Names" value={content.coupleNames} onChange={(v) => update("coupleNames", v)} />
           <Field label="Initials (envelope seal)" value={content.coupleInitials} onChange={(v) => update("coupleInitials", v)} />
-          <Field label="Wedding Date (YYYY-MM-DD)" value={content.weddingDate.split("T")[0]} onChange={(v) => update("weddingDate", v + "T16:00:00")} />
+          <Field label="Wedding Date (YYYY-MM-DD)" value={(content.weddingDate || "").split("T")[0] || ""} onChange={(v) => update("weddingDate", (v && v.trim()) ? v.trim() + "T16:00:00" : "2025-09-14T16:00:00")} />
           <Field label="Wedding Date Display" value={content.weddingDateDisplay} onChange={(v) => update("weddingDateDisplay", v)} />
           <Field label="Wedding Time" value={content.weddingTime} onChange={(v) => update("weddingTime", v)} />
           <Field label="RSVP Deadline" value={content.rsvpDeadline} onChange={(v) => update("rsvpDeadline", v)} />

@@ -9,7 +9,6 @@ import {
 } from "react";
 import { usePathname } from "next/navigation";
 import type { WeddingContent } from "../lib/content-types";
-import { supabase } from "../lib/supabase";
 
 const defaultContent: WeddingContent = {
   coupleNames: "Sophia & Alexander",
@@ -33,35 +32,21 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   const [content, setContent] = useState<WeddingContent>(defaultContent);
   const pathname = usePathname();
 
-  const fetchContent = async () => {
-    if (!supabase) return;
-    const { data, error } = await supabase
-      .from("wedding_content")
-      .select("data")
-      .eq("id", "default")
-      .maybeSingle();
-    if (!error && data?.data) {
-      setContent({ ...defaultContent, ...(data.data as object) });
-    }
+  const fetchContent = () => {
+    fetch(`/api/content?t=${Date.now()}`)
+      .then((r) => r.json())
+      .then((data) => setContent({ ...defaultContent, ...data }))
+      .catch(() => {});
   };
 
   useEffect(() => {
-    if (!supabase) return;
     fetchContent();
     const interval = setInterval(fetchContent, 5000);
     const onFocus = () => fetchContent();
     window.addEventListener("visibilitychange", onFocus);
-    // Subscribe to realtime changes - updates appear instantly when you save in Master
-    const channel = supabase
-      .channel("wedding_content")
-      .on("postgres_changes", { event: "*", schema: "public", table: "wedding_content" }, () => {
-        fetchContent();
-      })
-      .subscribe();
     return () => {
       clearInterval(interval);
       window.removeEventListener("visibilitychange", onFocus);
-      supabase?.removeChannel(channel);
     };
   }, []);
 
