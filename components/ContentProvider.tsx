@@ -61,7 +61,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     return () => {
       clearInterval(interval);
       window.removeEventListener("visibilitychange", onFocus);
-      supabase.removeChannel(channel);
+      supabase?.removeChannel(channel);
     };
   }, []);
 
