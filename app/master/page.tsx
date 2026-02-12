@@ -133,7 +133,7 @@ export default function MasterPage() {
           </button>
         </div>
         <div className="mt-8">
-          <ContentEditor supabase={supabase} />
+          <ContentEditor supabase={supabase} accessToken={session?.access_token} />
         </div>
       </div>
     </div>
