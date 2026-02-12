@@ -31,7 +31,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   const [content, setContent] = useState<WeddingContent>(defaultContent);
 
   const fetchContent = () => {
-    fetch("/api/content")
+    fetch(`/api/content?t=${Date.now()}`)
       .then((r) => r.json())
       .then((data) => setContent({ ...defaultContent, ...data }))
       .catch(() => {});
@@ -39,7 +39,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     fetchContent();
-    const interval = setInterval(fetchContent, 15000); // Refetch every 15 seconds
+    const interval = setInterval(fetchContent, 5000); // Refetch every 5 seconds
     const onFocus = () => fetchContent(); // Refetch when tab becomes visible
     window.addEventListener("visibilitychange", onFocus);
     return () => {
