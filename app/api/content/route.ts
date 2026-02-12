@@ -2,10 +2,13 @@ import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+const NO_CACHE = { "Cache-Control": "no-store, max-age=0" };
 
 export async function GET() {
-  if (!supabaseUrl || !supabaseKey) {
+  if (!supabaseUrl || !supabaseAnonKey) {
     return NextResponse.json(
       {
         coupleNames: "Sophia & Alexander",
@@ -48,16 +51,18 @@ export async function GET() {
         mapEmbedUrl:
           "https://www.google.com/maps?q=Al+Tawahin+(Kalaa+Weddings)&output=embed",
       },
-      { headers: { "Cache-Control": "s-maxage=60, stale-while-revalidate" } }
+      { headers: NO_CACHE }
     );
   }
 
-  const supabase = createClient(supabaseUrl, supabaseKey);
+  // Use service role to read (bypasses RLS) so content always loads
+  const key = supabaseServiceKey || supabaseAnonKey;
+  const supabase = createClient(supabaseUrl, key);
   const { data, error } = await supabase
     .from("wedding_content")
     .select("data")
     .eq("id", "default")
-    .single();
+    .maybeSingle();
 
   if (error || !data?.data) {
     return NextResponse.json(
@@ -102,11 +107,9 @@ export async function GET() {
         mapEmbedUrl:
           "https://www.google.com/maps?q=Al+Tawahin+(Kalaa+Weddings)&output=embed",
       },
-      { headers: { "Cache-Control": "s-maxage=60, stale-while-revalidate" } }
+      { headers: NO_CACHE }
     );
   }
 
-  return NextResponse.json(data.data, {
-    headers: { "Cache-Control": "s-maxage=60, stale-while-revalidate" },
-  });
+  return NextResponse.json(data.data, { headers: NO_CACHE });
 }
