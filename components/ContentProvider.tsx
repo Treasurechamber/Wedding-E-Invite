@@ -46,13 +46,22 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    if (!supabase) return;
     fetchContent();
-    const interval = setInterval(fetchContent, 3000);
+    const interval = setInterval(fetchContent, 5000);
     const onFocus = () => fetchContent();
     window.addEventListener("visibilitychange", onFocus);
+    // Subscribe to realtime changes - updates appear instantly when you save in Master
+    const channel = supabase
+      .channel("wedding_content")
+      .on("postgres_changes", { event: "*", schema: "public", table: "wedding_content" }, () => {
+        fetchContent();
+      })
+      .subscribe();
     return () => {
       clearInterval(interval);
       window.removeEventListener("visibilitychange", onFocus);
+      supabase.removeChannel(channel);
     };
   }, []);
 
