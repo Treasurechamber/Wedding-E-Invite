@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { WeddingContent } from "../../lib/content-types";
+import { ImageUpload } from "./ImageUpload";
 
 const DEFAULT_CONTENT: WeddingContent = {
   coupleNames: "Sophia & Alexander",
@@ -110,6 +111,19 @@ export function ContentEditor({ supabase }: ContentEditorProps) {
       c ? { ...c, [parent]: { ...c[parent], [key]: value } } : c
     );
 
+  const uploadImage = async (file: File, folder: string) => {
+    const ext = file.name.split(".").pop() || "jpg";
+    const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const { error } = await supabase.storage
+      .from("wedding-images")
+      .upload(path, file, { contentType: file.type, upsert: false });
+    if (error) throw error;
+    const { data: { publicUrl } } = supabase.storage
+      .from("wedding-images")
+      .getPublicUrl(path);
+    return publicUrl;
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -157,13 +171,81 @@ export function ContentEditor({ supabase }: ContentEditorProps) {
       </div>
 
       <div className="rounded-xl border border-white/10 bg-ink-800/60 p-6">
-        <h3 className="font-serif text-sm text-gold-400">Hero Carousel Images (one URL per line)</h3>
-        <textarea
-          value={content.heroSlides.join("\n")}
-          onChange={(e) => update("heroSlides", e.target.value.split("\n").filter(Boolean))}
-          rows={4}
-          className="mt-2 w-full rounded-xl border border-white/10 bg-ink-900/80 px-4 py-3 text-champagne-50 focus:border-gold-500/50 focus:outline-none"
-        />
+        <h3 className="font-serif text-sm text-gold-400">Hero Carousel Images</h3>
+        <p className="mt-1 text-xs text-slate-400">Browse to upload or paste URLs. Order = carousel order.</p>
+        <div className="mt-3 space-y-3">
+          {content.heroSlides.map((url, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <ImageUpload
+                value={url}
+                onChange={(v) => {
+                  const next = [...content.heroSlides];
+                  next[i] = v;
+                  update("heroSlides", next);
+                }}
+                onUpload={(f) => uploadImage(f, "hero")}
+                placeholder="Slide"
+              />
+              <button
+                type="button"
+                onClick={() => update("heroSlides", content.heroSlides.filter((_, j) => j !== i))}
+                className="shrink-0 rounded px-2 py-1 text-xs text-amber-400 hover:bg-ink-800"
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => update("heroSlides", [...content.heroSlides, ""])}
+            className="rounded-lg border border-dashed border-white/20 px-4 py-2 text-sm text-slate-400 hover:border-gold-500/50 hover:text-gold-400"
+          >
+            + Add slide
+          </button>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-white/10 bg-ink-800/60 p-6">
+        <h3 className="font-serif text-sm text-gold-400">Venue Cards (Day of Events images)</h3>
+        <p className="mt-1 text-xs text-slate-400">Browse to upload or paste URLs.</p>
+        <div className="mt-4 space-y-4">
+          {content.venueCards.map((card, i) => (
+            <div key={i} className="rounded-lg border border-white/5 bg-ink-900/50 p-4">
+              <Field label="Title" value={card.title} onChange={(v) => {
+                const next = [...content.venueCards];
+                next[i] = { ...next[i], title: v };
+                update("venueCards", next);
+              }} />
+              <Field label="Subtitle" value={card.subtitle} onChange={(v) => {
+                const next = [...content.venueCards];
+                next[i] = { ...next[i], subtitle: v };
+                update("venueCards", next);
+              }} />
+              <div className="mt-2">
+                <label className="block text-xs text-slate-400">Image</label>
+                <div className="mt-1">
+                  <ImageUpload
+                    value={card.src}
+                    onChange={(v) => {
+                      const next = [...content.venueCards];
+                      next[i] = { ...next[i], src: v };
+                      update("venueCards", next);
+                    }}
+                    onUpload={(f) => uploadImage(f, "venue")}
+                    placeholder="Venue"
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => update("venueCards", [...content.venueCards, { title: "", subtitle: "", src: "" }])}
+            className="rounded-lg border border-dashed border-white/20 px-4 py-2 text-sm text-slate-400 hover:border-gold-500/50 hover:text-gold-400"
+          >
+            + Add venue card
+          </button>
+        </div>
       </div>
 
       <div className="rounded-xl border border-white/10 bg-ink-800/60 p-6">
