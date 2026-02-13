@@ -38,7 +38,7 @@ export function RSVPForm() {
           phone: data.phone || null,
           attending: data.attending === "yes",
           guest_count: data.attending === "yes" ? data.guestCount : 0,
-          plus_one_name: data.plusOneName || null,
+          plus_one_name: data.attending === "yes" ? (data.plusOneName || null) : null,
           message: data.message || null,
         }),
       });
@@ -193,20 +193,22 @@ export function RSVPForm() {
             </div>
           )}
 
-          <div>
-            <label
-              htmlFor="plusOneName"
-              className="block text-sm font-medium text-slate-300"
-            >
-              Plus One Name (if applicable)
-            </label>
-            <input
-              id="plusOneName"
-              {...register("plusOneName")}
-              className="mt-2 w-full rounded-xl border border-white/10 bg-ink-900/80 px-4 py-3 text-champagne-50 placeholder-slate-500 focus:border-gold-500/50 focus:outline-none focus:ring-1 focus:ring-gold-500/50"
-              placeholder="Guest name"
-            />
-          </div>
+          {attending === "yes" && (
+            <div>
+              <label
+                htmlFor="plusOneName"
+                className="block text-sm font-medium text-slate-300"
+              >
+                Plus One Name (if applicable)
+              </label>
+              <input
+                id="plusOneName"
+                {...register("plusOneName")}
+                className="mt-2 w-full rounded-xl border border-white/10 bg-ink-900/80 px-4 py-3 text-champagne-50 placeholder-slate-500 focus:border-gold-500/50 focus:outline-none focus:ring-1 focus:ring-gold-500/50"
+                placeholder="Guest name"
+              />
+            </div>
+          )}
 
           <div>
             <label

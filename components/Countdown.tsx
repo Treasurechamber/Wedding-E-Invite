@@ -3,7 +3,8 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
-const FALLBACK_DATE = "2026-06-05T16:00:00";
+// June 5, 2026 4:00 PM - use explicit construction so it always works
+const FALLBACK_TARGET = new Date(2026, 5, 5, 16, 0, 0);
 
 function useCountdown(weddingDate: string) {
   const [now, setNow] = useState(() => new Date());
@@ -13,11 +14,10 @@ function useCountdown(weddingDate: string) {
     return () => clearInterval(t);
   }, []);
 
-  // Parse date - handle ISO, YYYY-MM-DD, "April 5, 2026", "JUNE 5, 2026 · 4:00 PM", MM/DD/YYYY, etc.
   const target = (() => {
     const raw = typeof weddingDate === "string" ? weddingDate : String(weddingDate || "");
-    const s = raw.split(/[·\-–—|]/)[0].trim() || "";
-    if (!s) return new Date(FALLBACK_DATE);
+    const s = raw.split(/[·\-–—|]/)[0].trim().replace(/\s+/g, " ") || "";
+    if (!s) return FALLBACK_TARGET;
 
     const tryParse = (str: string): Date | null => {
       const d = new Date(str);
@@ -29,7 +29,7 @@ function useCountdown(weddingDate: string) {
     if (isoMatch) {
       const toParse = s.includes("T") ? s : `${s}T16:00:00`;
       const d = tryParse(toParse);
-      if (d) return d;
+      if (d && d > new Date()) return d;
     }
 
     // "April 5, 2026" or "JUNE 5, 2026" - normalize month
@@ -38,7 +38,7 @@ function useCountdown(weddingDate: string) {
       const [, month, day, year] = textMatch;
       const normalized = `${month.charAt(0).toUpperCase()}${month.slice(1).toLowerCase()} ${day}, ${year}`;
       const d = tryParse(normalized);
-      if (d) return d;
+      if (d && d > new Date()) return d;
     }
 
     // MM/DD/YYYY or DD/MM/YYYY
@@ -46,12 +46,13 @@ function useCountdown(weddingDate: string) {
     if (slashMatch) {
       const [, a, b, year] = slashMatch;
       const d1 = tryParse(`${year}-${a.padStart(2, "0")}-${b.padStart(2, "0")}T16:00:00`);
-      if (d1) return d1;
+      if (d1 && d1 > new Date()) return d1;
       const d2 = tryParse(`${year}-${b.padStart(2, "0")}-${a.padStart(2, "0")}T16:00:00`);
-      if (d2) return d2;
+      if (d2 && d2 > new Date()) return d2;
     }
 
-    return tryParse(s) ?? new Date(FALLBACK_DATE);
+    const parsed = tryParse(s);
+    return parsed && parsed > new Date() ? parsed : FALLBACK_TARGET;
   })();
 
   const diff = Math.max(0, target.getTime() - now.getTime());
@@ -84,14 +85,14 @@ function Block({ value, label }: { value: number; label: string }) {
 }
 
 export function Countdown() {
-  const [dateStr, setDateStr] = useState(FALLBACK_DATE);
+  const [dateStr, setDateStr] = useState("2026-06-05T16:00:00");
 
   useEffect(() => {
     fetch("/api/content")
       .then((r) => r.json())
       .then((data) => {
-        const d = data?.weddingDate || data?.weddingDateDisplay || FALLBACK_DATE;
-        setDateStr(String(d).trim() || FALLBACK_DATE);
+        const d = data?.weddingDate || data?.weddingDateDisplay;
+        if (d && String(d).trim()) setDateStr(String(d).trim());
       })
       .catch(() => {});
   }, []);
