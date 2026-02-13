@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { hashPassword } from "@/lib/auth";
 
 export async function POST(request: Request) {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -27,37 +28,26 @@ export async function POST(request: Request) {
     );
   }
 
+  const emailNorm = email.trim().toLowerCase();
+  const passwordHash = hashPassword(password);
+
   const supabase = createClient(supabaseUrl, serviceKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  const { error: authError } = await supabase.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-  });
-
-  if (authError) {
-    if (authError.message.includes("already been registered")) {
-      // User exists, that's ok - just add to master_users
-    } else {
-      return NextResponse.json({ error: authError.message }, { status: 400 });
-    }
-  }
-
   const { error: insertError } = await supabase
     .from("master_users")
-    .upsert({ email }, { onConflict: "email" });
+    .upsert({ email: emailNorm, password_hash: passwordHash }, { onConflict: "email" });
 
   if (insertError) {
     return NextResponse.json(
-      { error: `Auth user created but master_users failed: ${insertError.message}` },
+      { error: `Failed to create master user: ${insertError.message}` },
       { status: 500 }
     );
   }
 
   return NextResponse.json({
     ok: true,
-    message: `Master user ${email} is ready. You can now log in at /master.`,
+    message: `Master user ${emailNorm} is ready. You can now log in at /master.`,
   });
 }

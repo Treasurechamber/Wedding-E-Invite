@@ -47,10 +47,9 @@ const DEFAULT_CONTENT: WeddingContent = {
 
 type ContentEditorProps = {
   supabase: import("@supabase/supabase-js").SupabaseClient;
-  accessToken?: string | null;
 };
 
-export function ContentEditor({ supabase, accessToken }: ContentEditorProps) {
+export function ContentEditor({ supabase }: ContentEditorProps) {
   const [content, setContent] = useState<WeddingContent | null>(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -79,28 +78,17 @@ export function ContentEditor({ supabase, accessToken }: ContentEditorProps) {
     if (!content) return;
     setSaving(true);
     setMessage("");
-    if (accessToken) {
-      const res = await fetch("/api/master/save", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
-        body: JSON.stringify({ data: content }),
-      });
-      const data = await res.json().catch(() => ({}));
-      setSaving(false);
-      const errMsg = data.error || "Failed to save";
-      setMessage(res.ok ? "Saved!" : `Save failed: ${errMsg}`);
-      if (res.ok) setTimeout(() => setMessage(""), 2000);
-      return;
-    }
-    const { error } = await (supabase as any)
-      .from("wedding_content")
-      .upsert(
-        { id: "default", data: content, updated_at: new Date().toISOString() },
-        { onConflict: "id" }
-      );
+    const res = await fetch("/api/master/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ data: content }),
+      credentials: "include",
+    });
+    const data = await res.json().catch(() => ({}));
     setSaving(false);
-    setMessage(error ? "Failed to save" : "Saved!");
-    if (!error) setTimeout(() => setMessage(""), 2000);
+    const errMsg = data.error || "Failed to save";
+    setMessage(res.ok ? "Saved!" : `Save failed: ${errMsg}`);
+    if (res.ok) setTimeout(() => setMessage(""), 2000);
   };
 
   if (!content) {

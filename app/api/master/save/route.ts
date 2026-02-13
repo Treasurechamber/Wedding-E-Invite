@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { getMasterSession } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -11,9 +12,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Server not configured" }, { status: 500 });
   }
 
-  const authHeader = request.headers.get("authorization");
-  const token = authHeader?.replace("Bearer ", "");
-  if (!token) {
+  const session = getMasterSession(request.headers.get("cookie"));
+  if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -21,15 +21,10 @@ export async function POST(request: Request) {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-  if (authError || !user?.email) {
-    return NextResponse.json({ error: "Invalid session" }, { status: 401 });
-  }
-
   const { data: masterRow } = await supabase
     .from("master_users")
     .select("email")
-    .eq("email", user.email)
+    .eq("email", session.email)
     .maybeSingle();
   if (!masterRow) {
     return NextResponse.json({ error: "Master access required" }, { status: 403 });

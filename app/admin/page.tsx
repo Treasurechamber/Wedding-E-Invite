@@ -1,16 +1,8 @@
 "use client";
 
-import { createClient, Session } from "@supabase/supabase-js";
 import * as XLSX from "xlsx";
 import { LogIn, LogOut, Search, Download } from "lucide-react";
-import { useEffect, useState } from "react";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
-const supabase =
-  supabaseUrl && supabaseKey
-    ? createClient(supabaseUrl, supabaseKey, { auth: { storageKey: "sb-admin-auth" } })
-    : null;
+import { useCallback, useEffect, useState } from "react";
 
 type RSVP = {
   id: string;
@@ -27,6 +19,8 @@ type RSVP = {
   message: string | null;
 };
 
+type Session = { role: string; email: string } | null;
+
 export default function AdminPage() {
   const [session, setSession] = useState<Session | null>(null);
   const [email, setEmail] = useState("");
@@ -37,45 +31,52 @@ export default function AdminPage() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "attending" | "declined">("all");
 
-  useEffect(() => {
-    if (!supabase) return;
-    supabase.auth.getSession().then(({ data: { session } }) => setSession(session ?? null));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, s) => setSession(s ?? null));
-    return () => subscription.unsubscribe();
-  }, [supabase]);
+  const fetchSession = useCallback(async () => {
+    const res = await fetch("/api/auth/session?role=admin", { credentials: "include" });
+    const data = await res.json().catch(() => ({}));
+    if (data.email) setSession({ role: "admin", email: data.email });
+    else setSession(null);
+  }, []);
+
+  const fetchRsvps = useCallback(async () => {
+    const res = await fetch("/api/admin/rsvps", { credentials: "include" });
+    if (res.ok) {
+      const data = await res.json();
+      setRsvps(data ?? []);
+    }
+  }, []);
 
   useEffect(() => {
-    if (!supabase || !session) return;
-    const q = supabase
-      .from("rsvps")
-      .select("*")
-      .order("created_at", { ascending: false });
-    q.then(({ data, error: e }) => {
-      if (!e) setRsvps((data ?? []) as RSVP[]);
-    });
-    const ch = supabase
-      .channel("rsvps")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "rsvps" }, () => {
-        supabase.from("rsvps").select("*").order("created_at", { ascending: false }).then(({ data }) => {
-          if (data) setRsvps(data as RSVP[]);
-        });
-      })
-      .subscribe();
-    return () => {
-      supabase.removeChannel(ch);
-    };
-  }, [supabase, session]);
+    fetchSession();
+  }, [fetchSession]);
+
+  useEffect(() => {
+    if (!session) return;
+    fetchRsvps();
+    const id = setInterval(fetchRsvps, 10000);
+    return () => clearInterval(id);
+  }, [session, fetchRsvps]);
 
   const login = async () => {
     setLoading(true);
     setError("");
-    const { error: e } = await supabase!.auth.signInWithPassword({ email, password });
+    const res = await fetch("/api/auth/admin-login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email.trim(), password }),
+      credentials: "include",
+    });
     setLoading(false);
-    if (e) setError(e.message);
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      setSession({ role: "admin", email: data.email ?? email });
+    } else {
+      setError(data.error ?? "Login failed");
+    }
   };
 
   const logout = async () => {
-    await supabase?.auth.signOut();
+    await fetch("/api/auth/logout?role=admin", { method: "POST", credentials: "include" });
     setSession(null);
   };
 
@@ -122,14 +123,6 @@ export default function AdminPage() {
     XLSX.utils.book_append_sheet(wb, ws, "RSVPs");
     XLSX.writeFile(wb, "rsvps.xlsx");
   };
-
-  if (!supabase) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-ink-900 p-4">
-        <p className="text-slate-400">Supabase not configured. Add env vars.</p>
-      </div>
-    );
-  }
 
   if (!session) {
     return (
