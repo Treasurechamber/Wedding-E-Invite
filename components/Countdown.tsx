@@ -12,30 +12,46 @@ function useCountdown(weddingDate: string) {
     return () => clearInterval(t);
   }, []);
 
-  // Parse date - handle ISO, YYYY-MM-DD, "April 5, 2026", "JUNE 5, 2026 · 4:00 PM", etc.
+  // Parse date - handle ISO, YYYY-MM-DD, "April 5, 2026", "JUNE 5, 2026 · 4:00 PM", MM/DD/YYYY, etc.
   const target = (() => {
     if (!weddingDate || typeof weddingDate !== "string") return null;
     // Strip " · 4:00 PM" or similar suffix - use only the date part
     let s = weddingDate.split(/[·\-–—|]/)[0].trim();
     if (!s) return null;
+
+    const tryParse = (str: string): Date | null => {
+      const d = new Date(str);
+      return !Number.isNaN(d.getTime()) ? d : null;
+    };
+
     // YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss
-    const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:T|$)/);
+    const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
     if (isoMatch) {
       const toParse = s.includes("T") ? s : `${s}T16:00:00`;
-      const d = new Date(toParse);
-      if (!Number.isNaN(d.getTime())) return d;
+      const d = tryParse(toParse);
+      if (d) return d;
     }
-    // "April 5, 2026" or "JUNE 5, 2026" - normalize month for browser compatibility
-    const textMatch = s.match(/^([A-Za-z]+)\s+(\d{1,2}),?\s*(\d{4})/);
+
+    // "April 5, 2026" or "JUNE 5, 2026" - normalize month
+    const textMatch = s.match(/([A-Za-z]+)\s+(\d{1,2}),?\s*(\d{4})/);
     if (textMatch) {
       const [, month, day, year] = textMatch;
       const normalized = `${month.charAt(0).toUpperCase()}${month.slice(1).toLowerCase()} ${day}, ${year}`;
-      const d = new Date(normalized);
-      if (!Number.isNaN(d.getTime())) return d;
+      const d = tryParse(normalized);
+      if (d) return d;
     }
-    // Last resort: try raw parse
-    const d = new Date(s);
-    return !Number.isNaN(d.getTime()) ? d : null;
+
+    // MM/DD/YYYY or DD/MM/YYYY
+    const slashMatch = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (slashMatch) {
+      const [, a, b, year] = slashMatch;
+      const d1 = tryParse(`${year}-${a.padStart(2, "0")}-${b.padStart(2, "0")}T16:00:00`);
+      if (d1) return d1;
+      const d2 = tryParse(`${year}-${b.padStart(2, "0")}-${a.padStart(2, "0")}T16:00:00`);
+      if (d2) return d2;
+    }
+
+    return tryParse(s);
   })();
 
   const diff = target

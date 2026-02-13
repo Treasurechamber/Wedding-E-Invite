@@ -14,8 +14,8 @@ import { supabase } from "../lib/supabase";
 const defaultContent: WeddingContent = {
   coupleNames: "Sophia & Alexander",
   coupleInitials: "S & A",
-  weddingDate: "2025-09-14T16:00:00",
-  weddingDateDisplay: "September 14, 2025",
+  weddingDate: "2026-06-05T16:00:00",
+  weddingDateDisplay: "June 5, 2026",
   weddingTime: "4:00 PM",
   rsvpDeadline: "August 1, 2025",
   hashtag: "#SophiaAndAlexander2025",
