@@ -12,35 +12,45 @@ function useCountdown(weddingDate: string) {
     return () => clearInterval(t);
   }, []);
 
-  // Parse date - handle ISO, YYYY-MM-DD, and formats like "April 5, 2026"
+  // Parse date - handle ISO, YYYY-MM-DD, "April 5, 2026", "APRIL 5, 2026", etc.
   const target = (() => {
     if (!weddingDate || typeof weddingDate !== "string") return null;
     const s = weddingDate.trim();
     if (!s) return null;
-    // YYYY-MM-DD without time → add default time
-    let toParse = /^\d{4}-\d{2}-\d{2}$/.test(s) ? `${s}T16:00:00` : s;
-    let d = new Date(toParse);
-    // If that failed, try parsing as "Month DD, YYYY"
-    if (Number.isNaN(d.getTime()) && /^[A-Za-z]+\s+\d{1,2},?\s+\d{4}$/.test(s)) {
-      d = new Date(s);
+    // YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss
+    const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:T|$)/);
+    if (isoMatch) {
+      const toParse = s.includes("T") ? s : `${s}T16:00:00`;
+      const d = new Date(toParse);
+      if (!Number.isNaN(d.getTime())) return d;
     }
-    if (Number.isNaN(d.getTime())) return null;
-    return d;
+    // "April 5, 2026" or "APRIL 5, 2026" - normalize month for browser compatibility
+    const textMatch = s.match(/^([A-Za-z]+)\s+(\d{1,2}),?\s+(\d{4})$/);
+    if (textMatch) {
+      const [, month, day, year] = textMatch;
+      const normalized = `${month.charAt(0).toUpperCase()}${month.slice(1).toLowerCase()} ${day}, ${year}`;
+      const d = new Date(normalized);
+      if (!Number.isNaN(d.getTime())) return d;
+    }
+    // Last resort: try raw parse
+    const d = new Date(s);
+    return !Number.isNaN(d.getTime()) ? d : null;
   })();
 
   const diff = target
     ? Math.max(0, target.getTime() - now.getTime())
     : 0;
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+  const days = Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
+  const hours = Math.max(0, Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)));
+  const minutes = Math.max(0, Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)));
+  const seconds = Math.max(0, Math.floor((diff % (1000 * 60)) / 1000));
 
   return { days, hours, minutes, seconds };
 }
 
 function Block({ value, label }: { value: number; label: string }) {
-  const s = String(value).padStart(2, "0");
+  const n = Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
+  const s = String(n).padStart(2, "0");
   return (
     <motion.div
       layout
