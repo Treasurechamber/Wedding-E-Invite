@@ -4,9 +4,15 @@ import { MapPin, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
 import { useContent } from "./ContentProvider";
 
+const LEBANON_MAP_URL = "https://www.google.com/maps?q=Al+Tawahin+Kalaa+Weddings+Ein+Baal+Lebanon&output=embed";
+
 export function VenueSection() {
   const content = useContent();
   const { ceremony, reception, mapEmbedUrl } = content;
+  // Force Lebanon map for Al Tawahin/Kalaa (avoids Syria result)
+  const mapUrl = (mapEmbedUrl && !mapEmbedUrl.toLowerCase().includes("lebanon") && /tawahin|kalaa/i.test(mapEmbedUrl))
+    ? LEBANON_MAP_URL
+    : (mapEmbedUrl || LEBANON_MAP_URL);
   return (
     <section className="relative py-20 md:py-28">
       <div className="mx-auto max-w-5xl px-4">
@@ -87,7 +93,7 @@ export function VenueSection() {
         >
           <iframe
             title="Wedding venue map"
-            src={mapEmbedUrl || "https://www.google.com/maps?output=embed"}
+            src={mapUrl}
             width="100%"
             height="320"
             style={{ border: 0 }}

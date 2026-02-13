@@ -12,10 +12,11 @@ function useCountdown(weddingDate: string) {
     return () => clearInterval(t);
   }, []);
 
-  // Parse date - handle ISO, YYYY-MM-DD, "April 5, 2026", "APRIL 5, 2026", etc.
+  // Parse date - handle ISO, YYYY-MM-DD, "April 5, 2026", "JUNE 5, 2026 · 4:00 PM", etc.
   const target = (() => {
     if (!weddingDate || typeof weddingDate !== "string") return null;
-    const s = weddingDate.trim();
+    // Strip " · 4:00 PM" or similar suffix - use only the date part
+    let s = weddingDate.split(/[·\-–—|]/)[0].trim();
     if (!s) return null;
     // YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss
     const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:T|$)/);
@@ -24,8 +25,8 @@ function useCountdown(weddingDate: string) {
       const d = new Date(toParse);
       if (!Number.isNaN(d.getTime())) return d;
     }
-    // "April 5, 2026" or "APRIL 5, 2026" - normalize month for browser compatibility
-    const textMatch = s.match(/^([A-Za-z]+)\s+(\d{1,2}),?\s+(\d{4})$/);
+    // "April 5, 2026" or "JUNE 5, 2026" - normalize month for browser compatibility
+    const textMatch = s.match(/^([A-Za-z]+)\s+(\d{1,2}),?\s*(\d{4})/);
     if (textMatch) {
       const [, month, day, year] = textMatch;
       const normalized = `${month.charAt(0).toUpperCase()}${month.slice(1).toLowerCase()} ${day}, ${year}`;

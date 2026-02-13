@@ -54,7 +54,7 @@ export async function GET() {
           { title: "Grand Hall", subtitle: "Reception & Dinner", src: "/venue/k2.jpg" },
         ],
         mapEmbedUrl:
-          "https://www.google.com/maps?q=Al+Tawahin+(Kalaa+Weddings)&output=embed",
+          "https://www.google.com/maps?q=Al+Tawahin+Kalaa+Weddings+Ein+Baal+Lebanon&output=embed",
       },
       { headers: NO_CACHE }
     );
@@ -110,7 +110,7 @@ export async function GET() {
           { title: "Grand Hall", subtitle: "Reception & Dinner", src: "/venue/k2.jpg" },
         ],
         mapEmbedUrl:
-          "https://www.google.com/maps?q=Al+Tawahin+(Kalaa+Weddings)&output=embed",
+          "https://www.google.com/maps?q=Al+Tawahin+Kalaa+Weddings+Ein+Baal+Lebanon&output=embed",
       },
       { headers: NO_CACHE }
     );

@@ -42,7 +42,7 @@ const DEFAULT_CONTENT: WeddingContent = {
     { title: "Garden Terrace", subtitle: "Sunset Ceremony", src: "/venue/k1.jpg" },
     { title: "Grand Hall", subtitle: "Reception & Dinner", src: "/venue/k2.jpg" },
   ],
-  mapEmbedUrl: "https://www.google.com/maps?q=Al+Tawahin+(Kalaa+Weddings)&output=embed",
+  mapEmbedUrl: "https://www.google.com/maps?q=Al+Tawahin+Kalaa+Weddings+Ein+Baal+Lebanon&output=embed",
 };
 
 type ContentEditorProps = {
