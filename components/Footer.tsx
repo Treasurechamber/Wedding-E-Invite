@@ -7,7 +7,23 @@ const CLICKS_NEEDED = 3;
 const CLICK_WINDOW_MS = 1500;
 
 function hashtagFromNames(coupleNames: string, weddingDate?: string): string {
-  const year = weddingDate ? new Date(weddingDate).getFullYear() : new Date().getFullYear();
+  let year = new Date().getFullYear();
+  if (weddingDate && String(weddingDate).trim()) {
+    const s = String(weddingDate).split(/[·\-–—|]/)[0].trim();
+    const toTry = [
+      s,
+      /^\d{4}-\d{2}-\d{2}$/.test(s) ? `${s}T16:00:00` : null,
+      s.match(/(\d{4})/)?.[1] ?? null,
+    ].filter(Boolean);
+    for (const str of toTry) {
+      const d = new Date(str as string);
+      const y = d.getFullYear();
+      if (!Number.isNaN(y) && y > 2000 && y < 2100) {
+        year = y;
+        break;
+      }
+    }
+  }
   const base = coupleNames
     .replace(/\s*&\s*/gi, "And")
     .replace(/[^a-zA-Z0-9]/g, "");
