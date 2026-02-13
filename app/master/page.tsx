@@ -8,7 +8,9 @@ import { ContentEditor } from "../admin/ContentEditor";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 const supabase =
-  supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
+  supabaseUrl && supabaseKey
+    ? createClient(supabaseUrl, supabaseKey, { auth: { storageKey: "sb-master-auth" } })
+    : null;
 
 export default function MasterPage() {
   const [session, setSession] = useState<Session | null>(null);

@@ -8,7 +8,9 @@ import { useEffect, useState } from "react";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 const supabase =
-  supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
+  supabaseUrl && supabaseKey
+    ? createClient(supabaseUrl, supabaseKey, { auth: { storageKey: "sb-admin-auth" } })
+    : null;
 
 type RSVP = {
   id: string;
