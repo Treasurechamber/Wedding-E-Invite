@@ -3,6 +3,7 @@ import { Cormorant_Garamond, Great_Vibes, Raleway } from "next/font/google";
 import "./globals.css";
 import { ContentProvider } from "../components/ContentProvider";
 import { DocumentTitle } from "../components/DocumentTitle";
+import { getWeddingContent } from "../lib/get-content";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -21,10 +22,23 @@ const raleway = Raleway({
   variable: "--font-raleway",
 });
 
-export const metadata: Metadata = {
-  title: "Wedding Invitation",
-  description: "A modern, cinematic wedding invitation experience.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const content = await getWeddingContent();
+  const coupleNames = content?.coupleNames || "Wedding Invitation";
+  const title = `${coupleNames} · Wedding Invitation`;
+  return {
+    title,
+    description: "A modern, cinematic wedding invitation experience.",
+    openGraph: {
+      title,
+      description: "A modern, cinematic wedding invitation experience.",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+    },
+  };
+}
 
 export default function RootLayout({
   children,
