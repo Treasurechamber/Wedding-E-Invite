@@ -22,8 +22,10 @@ export function RSVPForm() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
-  } = useForm<FormData>();
+  } = useForm<FormData>({ defaultValues: { attending: "yes", guestCount: 1 } });
+  const attending = watch("attending");
 
   const onSubmit = async (data: FormData) => {
     try {
@@ -35,7 +37,7 @@ export function RSVPForm() {
           email: data.email,
           phone: data.phone || null,
           attending: data.attending === "yes",
-          guest_count: data.guestCount,
+          guest_count: data.attending === "yes" ? data.guestCount : 0,
           plus_one_name: data.plusOneName || null,
           message: data.message || null,
         }),
@@ -163,31 +165,33 @@ export function RSVPForm() {
             )}
           </div>
 
-          <div>
-            <label
-              htmlFor="guestCount"
-              className="block text-sm font-medium text-slate-300"
-            >
-              Number of Guests *
-            </label>
-            <select
-              id="guestCount"
-              {...register("guestCount", {
-                required: "Required",
-                valueAsNumber: true,
-              })}
-              className="mt-2 w-full rounded-xl border border-white/10 bg-ink-900/80 px-4 py-3 text-champagne-50 focus:border-gold-500/50 focus:outline-none focus:ring-1 focus:ring-gold-500/50"
-            >
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-                <option key={n} value={n}>
-                  {n}
-                </option>
-              ))}
-            </select>
-            {errors.guestCount && (
-              <p className="mt-1 text-sm text-amber-400">{errors.guestCount.message}</p>
-            )}
-          </div>
+          {attending === "yes" && (
+            <div>
+              <label
+                htmlFor="guestCount"
+                className="block text-sm font-medium text-slate-300"
+              >
+                Number of Guests *
+              </label>
+              <select
+                id="guestCount"
+                {...register("guestCount", {
+                  required: attending === "yes" ? "Required" : false,
+                  valueAsNumber: true,
+                })}
+                className="mt-2 w-full rounded-xl border border-white/10 bg-ink-900/80 px-4 py-3 text-champagne-50 focus:border-gold-500/50 focus:outline-none focus:ring-1 focus:ring-gold-500/50"
+              >
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+              {errors.guestCount && (
+                <p className="mt-1 text-sm text-amber-400">{errors.guestCount.message}</p>
+              )}
+            </div>
+          )}
 
           <div>
             <label

@@ -14,10 +14,9 @@ function useCountdown(weddingDate: string) {
 
   // Parse date - handle ISO, YYYY-MM-DD, "April 5, 2026", "JUNE 5, 2026 · 4:00 PM", MM/DD/YYYY, etc.
   const target = (() => {
-    if (!weddingDate || typeof weddingDate !== "string") return null;
-    // Strip " · 4:00 PM" or similar suffix - use only the date part
-    let s = weddingDate.split(/[·\-–—|]/)[0].trim();
-    if (!s) return null;
+    const raw = typeof weddingDate === "string" ? weddingDate : String(weddingDate || "");
+    const s = raw.split(/[·\-–—|]/)[0].trim() || "";
+    if (!s) return new Date(FALLBACK_DATE);
 
     const tryParse = (str: string): Date | null => {
       const d = new Date(str);
@@ -51,12 +50,10 @@ function useCountdown(weddingDate: string) {
       if (d2) return d2;
     }
 
-    return tryParse(s);
+    return tryParse(s) ?? new Date(FALLBACK_DATE);
   })();
 
-  const diff = target
-    ? Math.max(0, target.getTime() - now.getTime())
-    : 0;
+  const diff = Math.max(0, target.getTime() - now.getTime());
   const days = Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
   const hours = Math.max(0, Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)));
   const minutes = Math.max(0, Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)));
@@ -85,10 +82,11 @@ function Block({ value, label }: { value: number; label: string }) {
   );
 }
 
+const FALLBACK_DATE = "2026-06-05T16:00:00";
+
 export function Countdown() {
   const content = useContent();
-  // Use weddingDate (ISO) first; fallback to weddingDateDisplay if weddingDate invalid
-  const dateStr = content.weddingDate || content.weddingDateDisplay || "";
+  const dateStr = String(content?.weddingDate || content?.weddingDateDisplay || FALLBACK_DATE).trim() || FALLBACK_DATE;
   const { days, hours, minutes, seconds } = useCountdown(dateStr);
 
   return (
