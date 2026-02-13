@@ -2,7 +2,8 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { useContent } from "./ContentProvider";
+
+const FALLBACK_DATE = "2026-06-05T16:00:00";
 
 function useCountdown(weddingDate: string) {
   const [now, setNow] = useState(() => new Date());
@@ -82,11 +83,19 @@ function Block({ value, label }: { value: number; label: string }) {
   );
 }
 
-const FALLBACK_DATE = "2026-06-05T16:00:00";
-
 export function Countdown() {
-  const content = useContent();
-  const dateStr = String(content?.weddingDate || content?.weddingDateDisplay || FALLBACK_DATE).trim() || FALLBACK_DATE;
+  const [dateStr, setDateStr] = useState(FALLBACK_DATE);
+
+  useEffect(() => {
+    fetch("/api/content")
+      .then((r) => r.json())
+      .then((data) => {
+        const d = data?.weddingDate || data?.weddingDateDisplay || FALLBACK_DATE;
+        setDateStr(String(d).trim() || FALLBACK_DATE);
+      })
+      .catch(() => {});
+  }, []);
+
   const { days, hours, minutes, seconds } = useCountdown(dateStr);
 
   return (
