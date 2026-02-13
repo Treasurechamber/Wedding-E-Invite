@@ -22,7 +22,7 @@ const raleway = Raleway({
 });
 
 export const metadata: Metadata = {
-  title: "Sophia & Alexander · Wedding Invitation",
+  title: "Wedding Invitation",
   description: "A modern, cinematic wedding invitation experience.",
 };
 

@@ -104,8 +104,6 @@ export default function AdminPage() {
       "Attending",
       "Guests",
       "Plus One",
-      "Dietary",
-      "Song",
       "Message",
     ];
     const rows = filtered.map((r) => [
@@ -115,8 +113,6 @@ export default function AdminPage() {
       r.attending ? "Yes" : "No",
       r.guest_count,
       r.plus_one_name ?? "",
-      (r.dietary_restrictions ?? []).join("; "),
-      r.song_request ?? "",
       r.message ?? "",
     ]);
     const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
@@ -236,7 +232,8 @@ export default function AdminPage() {
                 <th className="p-4 font-serif text-sm text-gold-400">Email</th>
                 <th className="p-4 font-serif text-sm text-gold-400">Attending</th>
                 <th className="p-4 font-serif text-sm text-gold-400">Guests</th>
-                <th className="p-4 font-serif text-sm text-gold-400">Dietary</th>
+                <th className="p-4 font-serif text-sm text-gold-400">Plus One</th>
+                <th className="p-4 font-serif text-sm text-gold-400">Message</th>
               </tr>
             </thead>
             <tbody>
@@ -250,8 +247,11 @@ export default function AdminPage() {
                     </span>
                   </td>
                   <td className="p-4 text-slate-300">{r.guest_count}</td>
-                  <td className="p-4 text-slate-400">
-                    {(r.dietary_restrictions ?? []).join(", ") || "—"}
+                  <td className="p-4 text-slate-400 max-w-[120px] truncate" title={r.plus_one_name ?? undefined}>
+                    {r.plus_one_name || "—"}
+                  </td>
+                  <td className="p-4 text-slate-400 max-w-[200px] truncate" title={r.message ?? undefined}>
+                    {r.message || "—"}
                   </td>
                 </tr>
               ))}
