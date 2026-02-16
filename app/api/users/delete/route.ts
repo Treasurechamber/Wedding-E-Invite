@@ -10,7 +10,8 @@ async function findUserByEmail(
 }
 
 export async function POST(request: Request) {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const { SUPABASE_URL } = await import("../../../../lib/supabase-config");
+  const url = SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) {
     return NextResponse.json({ error: "Server not configured" }, { status: 500 });

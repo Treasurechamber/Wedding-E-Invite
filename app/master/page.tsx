@@ -7,7 +7,8 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { ContentEditor } from "../admin/ContentEditor";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+import { SUPABASE_URL } from "../../lib/supabase-config";
+const supabaseUrl = SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 const supabase =
   supabaseUrl && supabaseKey
@@ -472,7 +473,7 @@ export default function MasterPage() {
 
         <div className="mt-12 rounded-xl border border-white/5 bg-ink-800/40 px-4 py-3 text-center">
           <p className="text-xs text-slate-500">
-            Connected to: <span className="font-mono text-slate-400">{process.env.NEXT_PUBLIC_SUPABASE_URL || "(not set)"}</span>
+            Connected to: <span className="font-mono text-slate-400">{SUPABASE_URL}</span>
           </p>
           <p className="mt-1 text-xs text-slate-500">
             This must match your Supabase project URL. If data is wrong, update Vercel env vars and redeploy. See SUPABASE_SETUP.md

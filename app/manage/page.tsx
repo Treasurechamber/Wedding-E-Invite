@@ -5,7 +5,8 @@ import { LogOut, Users, UserPlus, Trash2, Edit2 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+import { SUPABASE_URL } from "../../lib/supabase-config";
+const supabaseUrl = SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 const supabase =
   supabaseUrl && supabaseKey

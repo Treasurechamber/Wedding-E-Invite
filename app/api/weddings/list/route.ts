@@ -4,7 +4,8 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const { SUPABASE_URL } = await import("../../../../lib/supabase-config");
+  const url = SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return NextResponse.json({ weddings: [] });
 

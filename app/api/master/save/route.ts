@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+import { SUPABASE_URL } from "../../../../lib/supabase-config";
+const supabaseUrl = SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 export async function POST(request: Request) {
