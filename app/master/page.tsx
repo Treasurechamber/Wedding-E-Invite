@@ -1,7 +1,8 @@
 "use client";
 
 import { createClient } from "@supabase/supabase-js";
-import { LogIn, LogOut } from "lucide-react";
+import { LogIn, LogOut, Users } from "lucide-react";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { ContentEditor } from "../admin/ContentEditor";
 
@@ -99,12 +100,20 @@ export default function MasterPage() {
       <div className="mx-auto max-w-5xl">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h1 className="font-script text-3xl text-gold-400">Master Content</h1>
-          <button
-            onClick={logout}
-            className="flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2 text-sm text-slate-300 hover:bg-ink-800"
-          >
-            <LogOut className="h-4 w-4" /> Sign Out
-          </button>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/manage"
+              className="flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2 text-sm text-slate-300 hover:bg-ink-800"
+            >
+              <Users className="h-4 w-4" /> Manage Users
+            </Link>
+            <button
+              onClick={logout}
+              className="flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2 text-sm text-slate-300 hover:bg-ink-800"
+            >
+              <LogOut className="h-4 w-4" /> Sign Out
+            </button>
+          </div>
         </div>
         <div className="mt-8">
           <ContentEditor supabase={supabase} />
