@@ -1,7 +1,7 @@
 "use client";
 
 import { createClient, Session } from "@supabase/supabase-js";
-import { LogIn, LogOut, Users, Plus, Trash2, Pencil, Copy } from "lucide-react";
+import { LogIn, LogOut, Users, Plus, Trash2, Pencil, Copy, RefreshCw } from "lucide-react";
 import { THEMES } from "../../lib/themes";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -38,7 +38,7 @@ export default function MasterPage() {
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
 
   const fetchWeddings = useCallback(async () => {
-    const res = await fetch("/api/weddings/list");
+    const res = await fetch(`/api/weddings/list?t=${Date.now()}`);
     const data = await res.json().catch(() => ({}));
     const list = (data.weddings ?? []) as Wedding[];
     setWeddings(list);
@@ -233,6 +233,14 @@ export default function MasterPage() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h1 className="font-script text-3xl text-gold-400">Master Content</h1>
           <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => fetchWeddings()}
+              className="flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2 text-sm text-slate-300 hover:bg-ink-800"
+              title="Refresh weddings list"
+            >
+              <RefreshCw className="h-4 w-4" /> Refresh
+            </button>
             <button
               type="button"
               onClick={() => setShowCreate(!showCreate)}
@@ -461,6 +469,15 @@ export default function MasterPage() {
         {weddings.length === 0 && !showCreate && (
           <p className="mt-8 text-slate-400">No weddings yet. Click &quot;New Wedding&quot; to create one.</p>
         )}
+
+        <div className="mt-12 rounded-xl border border-white/5 bg-ink-800/40 px-4 py-3 text-center">
+          <p className="text-xs text-slate-500">
+            Connected to: <span className="font-mono text-slate-400">{process.env.NEXT_PUBLIC_SUPABASE_URL || "(not set)"}</span>
+          </p>
+          <p className="mt-1 text-xs text-slate-500">
+            This must match your Supabase project URL. If data is wrong, update Vercel env vars and redeploy. See SUPABASE_SETUP.md
+          </p>
+        </div>
       </div>
     </div>
   );
