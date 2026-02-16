@@ -51,9 +51,10 @@ type ContentEditorProps = {
   supabase: import("@supabase/supabase-js").SupabaseClient;
   accessToken?: string | null;
   weddingId?: string;
+  onSaveSuccess?: () => void;
 };
 
-export function ContentEditor({ supabase, accessToken, weddingId = "default" }: ContentEditorProps) {
+export function ContentEditor({ supabase, accessToken, weddingId = "default", onSaveSuccess }: ContentEditorProps) {
   const [content, setContent] = useState<WeddingContent | null>(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -94,7 +95,10 @@ export function ContentEditor({ supabase, accessToken, weddingId = "default" }: 
     setSaving(false);
     const errMsg = data.error || "Failed to save";
     setMessage(res.ok ? "Saved!" : `Save failed: ${errMsg}`);
-    if (res.ok) setTimeout(() => setMessage(""), 2000);
+    if (res.ok) {
+      setTimeout(() => setMessage(""), 2000);
+      onSaveSuccess?.();
+    }
   };
 
   if (!content) {

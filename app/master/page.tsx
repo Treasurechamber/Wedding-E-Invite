@@ -1,7 +1,7 @@
 "use client";
 
 import { createClient, Session } from "@supabase/supabase-js";
-import { LogIn, LogOut, Users, Plus } from "lucide-react";
+import { LogIn, LogOut, Users, Plus, Trash2, Pencil } from "lucide-react";
 import { THEMES } from "../../lib/themes";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -30,6 +30,8 @@ export default function MasterPage() {
   const [newCoupleNames, setNewCoupleNames] = useState("");
   const [newAdminEmails, setNewAdminEmails] = useState("");
   const [newTheme, setNewTheme] = useState<"gold" | "rose" | "minimal">("gold");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchWeddings = useCallback(async () => {
     const res = await fetch("/api/weddings/list");
@@ -116,6 +118,32 @@ export default function MasterPage() {
       setError(data.error ?? "Failed to create");
     }
   };
+
+  const deleteWedding = async () => {
+    if (!selectedWedding || !session?.access_token) return;
+    setDeleting(true);
+    setError("");
+    const res = await fetch("/api/weddings/delete", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ weddingId: selectedWedding }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setDeleting(false);
+    setShowDeleteConfirm(false);
+    if (res.ok) {
+      const remaining = weddings.filter((w) => w.id !== selectedWedding);
+      setWeddings(remaining);
+      setSelectedWedding(remaining[0]?.id ?? "");
+    } else {
+      setError(data.error ?? "Failed to delete");
+    }
+  };
+
+  const currentWedding = weddings.find((w) => w.id === selectedWedding);
 
   if (!supabase) {
     return (
@@ -209,6 +237,15 @@ export default function MasterPage() {
             >
               <Plus className="h-4 w-4" /> New Wedding
             </button>
+            {selectedWedding && (
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(true)}
+                className="flex items-center gap-2 rounded-lg border border-red-500/50 px-4 py-2 text-sm text-red-400 hover:bg-red-500/10"
+              >
+                <Trash2 className="h-4 w-4" /> Delete Wedding
+              </button>
+            )}
             <Link
               href="/manage"
               className="flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2 text-sm text-slate-300 hover:bg-ink-800"
@@ -286,11 +323,43 @@ export default function MasterPage() {
         )}
 
         {weddings.length > 0 && (
-          <div className="mt-8">
-            <p className="mb-2 text-sm text-slate-400">
-              Editing: {selectedWedding} · <a href={`/${selectedWedding}`} target="_blank" rel="noopener noreferrer" className="text-gold-400 hover:underline">View live</a>
-            </p>
-            <ContentEditor supabase={supabase} accessToken={session?.access_token} weddingId={selectedWedding} />
+          <div className="mt-8" id="edit-content">
+            <div className="mb-2 flex items-center gap-2">
+              <Pencil className="h-4 w-4 text-gold-400" />
+              <span className="text-sm text-slate-400">
+                Editing: {selectedWedding} · <a href={`/${selectedWedding}`} target="_blank" rel="noopener noreferrer" className="text-gold-400 hover:underline">View live</a>
+              </span>
+            </div>
+            <ContentEditor supabase={supabase} accessToken={session?.access_token} weddingId={selectedWedding} onSaveSuccess={fetchWeddings} />
+          </div>
+        )}
+
+        {showDeleteConfirm && currentWedding && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+            <div className="w-full max-w-md rounded-2xl border border-red-500/30 bg-ink-800 p-6">
+              <h3 className="font-serif text-lg text-red-400">Delete Wedding?</h3>
+              <p className="mt-3 text-sm text-slate-300">
+                Remove <strong>{currentWedding.coupleNames}</strong> ({selectedWedding})? This will delete the wedding, its content, and all RSVPs. This cannot be undone.
+              </p>
+              {error && <p className="mt-2 text-sm text-amber-400">{error}</p>}
+              <div className="mt-6 flex gap-3">
+                <button
+                  type="button"
+                  onClick={deleteWedding}
+                  disabled={deleting}
+                  className="flex-1 rounded-xl bg-red-600 py-2 text-white transition hover:bg-red-500 disabled:opacity-70"
+                >
+                  {deleting ? "Deleting…" : "Delete"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setShowDeleteConfirm(false); setError(""); }}
+                  className="flex-1 rounded-xl border border-white/10 py-2 text-slate-300 hover:bg-ink-800"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
