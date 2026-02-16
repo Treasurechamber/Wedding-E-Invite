@@ -1,7 +1,7 @@
 "use client";
 
 import { createClient, Session } from "@supabase/supabase-js";
-import { LogIn, LogOut, Users, Plus, Trash2, Pencil } from "lucide-react";
+import { LogIn, LogOut, Users, Plus, Trash2, Pencil, Copy } from "lucide-react";
 import { THEMES } from "../../lib/themes";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -31,7 +31,11 @@ export default function MasterPage() {
   const [newAdminEmails, setNewAdminEmails] = useState("");
   const [newTheme, setNewTheme] = useState<"gold" | "rose" | "minimal">("gold");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [weddingToDelete, setWeddingToDelete] = useState<Wedding | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [copiedLink, setCopiedLink] = useState<string | null>(null);
+
+  const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
 
   const fetchWeddings = useCallback(async () => {
     const res = await fetch("/api/weddings/list");
@@ -119,8 +123,21 @@ export default function MasterPage() {
     }
   };
 
+  const copyLink = (url: string, id: string) => {
+    navigator.clipboard.writeText(url);
+    setCopiedLink(id);
+    setTimeout(() => setCopiedLink(null), 2000);
+  };
+
+  const openDeleteConfirm = (w: Wedding) => {
+    setWeddingToDelete(w);
+    setShowDeleteConfirm(true);
+    setError("");
+  };
+
   const deleteWedding = async () => {
-    if (!selectedWedding || !session?.access_token) return;
+    const id = weddingToDelete?.id;
+    if (!id || !session?.access_token) return;
     setDeleting(true);
     setError("");
     const res = await fetch("/api/weddings/delete", {
@@ -129,21 +146,20 @@ export default function MasterPage() {
         "Content-Type": "application/json",
         Authorization: `Bearer ${session.access_token}`,
       },
-      body: JSON.stringify({ weddingId: selectedWedding }),
+      body: JSON.stringify({ weddingId: id }),
     });
     const data = await res.json().catch(() => ({}));
     setDeleting(false);
     setShowDeleteConfirm(false);
+    setWeddingToDelete(null);
     if (res.ok) {
-      const remaining = weddings.filter((w) => w.id !== selectedWedding);
+      const remaining = weddings.filter((w) => w.id !== id);
       setWeddings(remaining);
-      setSelectedWedding(remaining[0]?.id ?? "");
+      if (selectedWedding === id) setSelectedWedding(remaining[0]?.id ?? "");
     } else {
       setError(data.error ?? "Failed to delete");
     }
   };
-
-  const currentWedding = weddings.find((w) => w.id === selectedWedding);
 
   if (!supabase) {
     return (
@@ -217,19 +233,6 @@ export default function MasterPage() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h1 className="font-script text-3xl text-gold-400">Master Content</h1>
           <div className="flex flex-wrap items-center gap-3">
-            {weddings.length > 0 && (
-              <select
-                value={selectedWedding}
-                onChange={(e) => setSelectedWedding(e.target.value)}
-                className="rounded-xl border border-white/10 bg-ink-800/80 px-4 py-2 text-champagne-50 focus:border-gold-500/50 focus:outline-none"
-              >
-                {weddings.map((w) => (
-                  <option key={w.id} value={w.id}>
-                    {w.coupleNames} ({w.id})
-                  </option>
-                ))}
-              </select>
-            )}
             <button
               type="button"
               onClick={() => setShowCreate(!showCreate)}
@@ -237,15 +240,6 @@ export default function MasterPage() {
             >
               <Plus className="h-4 w-4" /> New Wedding
             </button>
-            {selectedWedding && (
-              <button
-                type="button"
-                onClick={() => setShowDeleteConfirm(true)}
-                className="flex items-center gap-2 rounded-lg border border-red-500/50 px-4 py-2 text-sm text-red-400 hover:bg-red-500/10"
-              >
-                <Trash2 className="h-4 w-4" /> Delete Wedding
-              </button>
-            )}
             <Link
               href="/manage"
               className="flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2 text-sm text-slate-300 hover:bg-ink-800"
@@ -323,23 +317,124 @@ export default function MasterPage() {
         )}
 
         {weddings.length > 0 && (
+          <div className="mt-8">
+            <h2 className="font-serif text-lg text-gold-400 mb-4">All Weddings</h2>
+            <div className="overflow-x-auto rounded-xl border border-white/10">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="border-b border-white/10 bg-ink-800/60">
+                    <th className="p-3 font-serif text-sm text-gold-400">Couple</th>
+                    <th className="p-3 font-serif text-sm text-gold-400">Slug</th>
+                    <th className="p-3 font-serif text-sm text-gold-400">Wedding Link</th>
+                    <th className="p-3 font-serif text-sm text-gold-400">Admin Link</th>
+                    <th className="p-3 font-serif text-sm text-gold-400 w-24">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {weddings.map((w) => {
+                    const weddingUrl = `${baseUrl}/${w.id}`;
+                    const adminUrl = `${baseUrl}/admin`;
+                    return (
+                      <tr
+                        key={w.id}
+                        className={`border-b border-white/5 hover:bg-ink-800/40 ${selectedWedding === w.id ? "bg-ink-800/60" : ""}`}
+                      >
+                        <td className="p-3 text-champagne-50 font-serif">{w.coupleNames}</td>
+                        <td className="p-3 text-slate-400 font-mono text-sm">{w.id}</td>
+                        <td className="p-3">
+                          <div className="flex items-center gap-2">
+                            <a
+                              href={weddingUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-gold-400 hover:underline text-sm truncate max-w-[180px]"
+                            >
+                              {weddingUrl}
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() => copyLink(weddingUrl, `wedding-${w.id}`)}
+                              className="shrink-0 rounded p-1 text-slate-400 hover:text-gold-400"
+                              title="Copy wedding link"
+                            >
+                              {copiedLink === `wedding-${w.id}` ? (
+                                <span className="text-xs text-emerald-400">Copied!</span>
+                              ) : (
+                                <Copy className="h-4 w-4" />
+                              )}
+                            </button>
+                          </div>
+                        </td>
+                        <td className="p-3">
+                          <div className="flex items-center gap-2">
+                            <a
+                              href={adminUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-gold-400 hover:underline text-sm"
+                            >
+                              {adminUrl}
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() => copyLink(adminUrl, `admin-${w.id}`)}
+                              className="shrink-0 rounded p-1 text-slate-400 hover:text-gold-400"
+                              title="Copy admin link"
+                            >
+                              {copiedLink === `admin-${w.id}` ? (
+                                <span className="text-xs text-emerald-400">Copied!</span>
+                              ) : (
+                                <Copy className="h-4 w-4" />
+                              )}
+                            </button>
+                          </div>
+                        </td>
+                        <td className="p-3">
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedWedding(w.id)}
+                              className="rounded px-2 py-1 text-xs text-gold-400 hover:bg-ink-800"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => openDeleteConfirm(w)}
+                              className="rounded p-1 text-red-400 hover:bg-red-500/10"
+                              title="Delete wedding"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {weddings.length > 0 && selectedWedding && (
           <div className="mt-8" id="edit-content">
             <div className="mb-2 flex items-center gap-2">
               <Pencil className="h-4 w-4 text-gold-400" />
               <span className="text-sm text-slate-400">
-                Editing: {selectedWedding} · <a href={`/${selectedWedding}`} target="_blank" rel="noopener noreferrer" className="text-gold-400 hover:underline">View live</a>
+                Editing: {weddings.find((w) => w.id === selectedWedding)?.coupleNames ?? selectedWedding} · <a href={`/${selectedWedding}`} target="_blank" rel="noopener noreferrer" className="text-gold-400 hover:underline">View live</a>
               </span>
             </div>
             <ContentEditor supabase={supabase} accessToken={session?.access_token} weddingId={selectedWedding} onSaveSuccess={fetchWeddings} />
           </div>
         )}
 
-        {showDeleteConfirm && currentWedding && (
+        {showDeleteConfirm && weddingToDelete && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
             <div className="w-full max-w-md rounded-2xl border border-red-500/30 bg-ink-800 p-6">
               <h3 className="font-serif text-lg text-red-400">Delete Wedding?</h3>
               <p className="mt-3 text-sm text-slate-300">
-                Remove <strong>{currentWedding.coupleNames}</strong> ({selectedWedding})? This will delete the wedding, its content, and all RSVPs. This cannot be undone.
+                Remove <strong>{weddingToDelete.coupleNames}</strong> ({weddingToDelete.id})? This will delete the wedding, its content, and all RSVPs. This cannot be undone.
               </p>
               {error && <p className="mt-2 text-sm text-amber-400">{error}</p>}
               <div className="mt-6 flex gap-3">
@@ -353,7 +448,7 @@ export default function MasterPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setShowDeleteConfirm(false); setError(""); }}
+                  onClick={() => { setShowDeleteConfirm(false); setWeddingToDelete(null); setError(""); }}
                   className="flex-1 rounded-xl border border-white/10 py-2 text-slate-300 hover:bg-ink-800"
                 >
                   Cancel
