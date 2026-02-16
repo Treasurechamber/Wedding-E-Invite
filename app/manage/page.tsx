@@ -1,7 +1,7 @@
 "use client";
 
 import { createClient, Session } from "@supabase/supabase-js";
-import { LogOut, Users, UserPlus } from "lucide-react";
+import { LogOut, Users, UserPlus, Trash2, Edit2 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
@@ -22,6 +22,8 @@ export default function ManageUsersPage() {
   const [message, setMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
   const [masters, setMasters] = useState<{ email: string }[]>([]);
   const [admins, setAdmins] = useState<{ email: string }[]>([]);
+  const [editing, setEditing] = useState<{ role: "master" | "admin"; email: string } | null>(null);
+  const [editPassword, setEditPassword] = useState("");
 
   const fetchSession = useCallback(async () => {
     if (!supabase) return;
@@ -101,6 +103,58 @@ export default function ManageUsersPage() {
   const logout = async () => {
     await supabase?.auth.signOut();
     setSession(null);
+  };
+
+  const deleteUser = async (role: "master" | "admin", email: string) => {
+    if (!confirm(`Delete ${email}? This cannot be undone.`)) return;
+    if (!session?.access_token) return;
+    setLoading(true);
+    setMessage(null);
+    const res = await fetch("/api/users/delete", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ role, email }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setLoading(false);
+    if (res.ok) {
+      setMessage({ type: "ok", text: data.message ?? "User deleted" });
+      setEditing(null);
+      fetchUsers();
+    } else {
+      setMessage({ type: "err", text: data.error ?? "Failed to delete" });
+    }
+  };
+
+  const updatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editing || !editPassword || editPassword.length < 6 || !session?.access_token) return;
+    setLoading(true);
+    setMessage(null);
+    const res = await fetch("/api/users/update", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({
+        role: editing.role,
+        email: editing.email,
+        password: editPassword,
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setLoading(false);
+    if (res.ok) {
+      setMessage({ type: "ok", text: data.message ?? "Password updated" });
+      setEditing(null);
+      setEditPassword("");
+    } else {
+      setMessage({ type: "err", text: data.error ?? "Failed to update" });
+    }
   };
 
   if (!supabase) {
@@ -208,11 +262,6 @@ export default function ManageUsersPage() {
                   className="w-full rounded-xl border border-white/10 bg-ink-900/80 px-4 py-3 text-champagne-50 placeholder-slate-500 focus:border-gold-500/50 focus:outline-none"
                 />
               </div>
-              {message && (
-                <p className={message.type === "ok" ? "text-emerald-400" : "text-amber-400"}>
-                  {message.text}
-                </p>
-              )}
               <button
                 type="submit"
                 disabled={loading}
@@ -225,22 +274,97 @@ export default function ManageUsersPage() {
 
           <section className="rounded-2xl border border-white/10 bg-ink-800/60 p-6">
             <h2 className="font-serif text-lg text-gold-400 mb-4">Current Users</h2>
+            {message && (
+              <p className={`mb-4 ${message.type === "ok" ? "text-emerald-400" : "text-amber-400"}`}>
+                {message.text}
+              </p>
+            )}
+            {editing ? (
+              <form onSubmit={updatePassword} className="mb-6 rounded-xl border border-gold-500/30 bg-ink-900/50 p-4">
+                <p className="text-sm text-slate-400 mb-2">Change password for {editing.email}</p>
+                <div className="flex gap-2">
+                  <input
+                    type="password"
+                    value={editPassword}
+                    onChange={(e) => setEditPassword(e.target.value)}
+                    placeholder="New password (min 6 chars)"
+                    className="flex-1 rounded-lg border border-white/10 bg-ink-800 px-3 py-2 text-champagne-50 placeholder-slate-500 focus:border-gold-500/50 focus:outline-none"
+                    minLength={6}
+                  />
+                  <button
+                    type="submit"
+                    disabled={loading || editPassword.length < 6}
+                    className="rounded-lg bg-gold-500 px-4 py-2 text-ink-900 hover:bg-gold-400 disabled:opacity-50"
+                  >
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setEditing(null); setEditPassword(""); }}
+                    className="rounded-lg border border-white/10 px-4 py-2 text-slate-400 hover:bg-ink-800"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            ) : null}
             <div className="grid gap-6 sm:grid-cols-2">
               <div>
                 <h3 className="text-sm font-medium text-slate-400 mb-2">Master users</h3>
-                <ul className="space-y-1 text-champagne-50">
+                <ul className="space-y-2 text-champagne-50">
                   {masters.length === 0 && <li className="text-slate-500">None</li>}
                   {masters.map((u) => (
-                    <li key={u.email} className="text-sm">{u.email}</li>
+                    <li key={u.email} className="flex items-center justify-between gap-2 text-sm">
+                      <span>{u.email}</span>
+                      <div className="flex gap-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setEditing({ role: "master", email: u.email })}
+                          className="rounded p-1 text-slate-400 hover:bg-ink-800 hover:text-gold-400"
+                          title="Change password"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => deleteUser("master", u.email)}
+                          disabled={u.email === session?.user?.email}
+                          className="rounded p-1 text-slate-400 hover:bg-ink-800 hover:text-amber-400 disabled:opacity-40 disabled:hover:bg-transparent"
+                          title={u.email === session?.user?.email ? "Cannot delete yourself" : "Delete"}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </li>
                   ))}
                 </ul>
               </div>
               <div>
                 <h3 className="text-sm font-medium text-slate-400 mb-2">Admin users</h3>
-                <ul className="space-y-1 text-champagne-50">
+                <ul className="space-y-2 text-champagne-50">
                   {admins.length === 0 && <li className="text-slate-500">None</li>}
                   {admins.map((u) => (
-                    <li key={u.email} className="text-sm">{u.email}</li>
+                    <li key={u.email} className="flex items-center justify-between gap-2 text-sm">
+                      <span>{u.email}</span>
+                      <div className="flex gap-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setEditing({ role: "admin", email: u.email })}
+                          className="rounded p-1 text-slate-400 hover:bg-ink-800 hover:text-gold-400"
+                          title="Change password"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => deleteUser("admin", u.email)}
+                          className="rounded p-1 text-slate-400 hover:bg-ink-800 hover:text-amber-400"
+                          title="Delete"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </li>
                   ))}
                 </ul>
               </div>
