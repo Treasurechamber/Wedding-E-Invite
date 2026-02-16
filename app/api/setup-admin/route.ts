@@ -1,6 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
-import { hashPassword } from "@/lib/auth";
 
 export async function POST(request: Request) {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -29,25 +28,22 @@ export async function POST(request: Request) {
   }
 
   const emailNorm = email.trim().toLowerCase();
-  const passwordHash = hashPassword(password);
-
   const supabase = createClient(supabaseUrl, serviceKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  const { error: insertError } = await supabase
-    .from("admin_users")
-    .upsert({ email: emailNorm, password_hash: passwordHash }, { onConflict: "email" });
+  const { error: authError } = await supabase.auth.admin.createUser({
+    email: emailNorm,
+    password,
+    email_confirm: true,
+  });
 
-  if (insertError) {
-    return NextResponse.json(
-      { error: `Failed to create admin user: ${insertError.message}` },
-      { status: 500 }
-    );
+  if (authError) {
+    return NextResponse.json({ error: authError.message }, { status: 400 });
   }
 
   return NextResponse.json({
     ok: true,
-    message: `Admin user ${emailNorm} is ready. You can now log in at /admin.`,
+    message: `Admin user ${emailNorm} is ready. Log in at /admin.`,
   });
 }

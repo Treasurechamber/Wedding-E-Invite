@@ -47,9 +47,10 @@ const DEFAULT_CONTENT: WeddingContent = {
 
 type ContentEditorProps = {
   supabase: import("@supabase/supabase-js").SupabaseClient;
+  accessToken?: string | null;
 };
 
-export function ContentEditor({ supabase }: ContentEditorProps) {
+export function ContentEditor({ supabase, accessToken }: ContentEditorProps) {
   const [content, setContent] = useState<WeddingContent | null>(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -78,9 +79,11 @@ export function ContentEditor({ supabase }: ContentEditorProps) {
     if (!content) return;
     setSaving(true);
     setMessage("");
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
     const res = await fetch("/api/master/save", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ data: content }),
       credentials: "include",
     });

@@ -1,13 +1,20 @@
 "use client";
 
+import { createClient, Session } from "@supabase/supabase-js";
 import { LogOut, Users, UserPlus } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
 
-type Session = { role: string; email: string } | null;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+const supabase =
+  supabaseUrl && supabaseKey
+    ? createClient(supabaseUrl, supabaseKey, { auth: { storageKey: "sb-master-auth" } })
+    : null;
 
 export default function ManageUsersPage() {
   const [session, setSession] = useState<Session | null>(null);
+  const [isMaster, setIsMaster] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
   const [role, setRole] = useState<"master" | "admin">("master");
   const [email, setEmail] = useState("");
@@ -17,32 +24,51 @@ export default function ManageUsersPage() {
   const [admins, setAdmins] = useState<{ email: string }[]>([]);
 
   const fetchSession = useCallback(async () => {
-    const res = await fetch("/api/auth/session?role=master", { credentials: "include" });
-    const data = await res.json().catch(() => ({}));
-    if (data.email) setSession({ role: "master", email: data.email });
-    else setSession(null);
+    if (!supabase) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    setSession(session ?? null);
   }, []);
 
   const fetchUsers = useCallback(async () => {
-    const res = await fetch("/api/users/list", { credentials: "include" });
+    if (!session?.access_token) return;
+    const res = await fetch("/api/users/list", {
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    });
     if (res.ok) {
       const data = await res.json();
       setMasters(data.masters ?? []);
       setAdmins(data.admins ?? []);
     }
-  }, []);
+  }, [session?.access_token]);
 
   useEffect(() => {
     fetchSession();
   }, [fetchSession]);
 
   useEffect(() => {
-    if (session) fetchUsers();
-  }, [session, fetchUsers]);
+    supabase?.auth.onAuthStateChange((_, s) => setSession(s ?? null));
+  }, []);
+
+  useEffect(() => {
+    if (!supabase || !session?.user?.email) {
+      setIsMaster(null);
+      return;
+    }
+    supabase
+      .from("master_users")
+      .select("email")
+      .eq("email", session.user.email)
+      .maybeSingle()
+      .then(({ data }) => setIsMaster(!!data));
+  }, [session]);
+
+  useEffect(() => {
+    if (session && isMaster) fetchUsers();
+  }, [session, isMaster, fetchUsers]);
 
   const createUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !password) {
+    if (!email.trim() || !password || !session?.access_token) {
       setMessage({ type: "err", text: "Email and password required" });
       return;
     }
@@ -54,9 +80,11 @@ export default function ManageUsersPage() {
     setMessage(null);
     const res = await fetch("/api/users/create", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+      },
       body: JSON.stringify({ role, email: email.trim(), password }),
-      credentials: "include",
     });
     const data = await res.json().catch(() => ({}));
     setLoading(false);
@@ -71,15 +99,23 @@ export default function ManageUsersPage() {
   };
 
   const logout = async () => {
-    await fetch("/api/auth/logout?role=master", { method: "POST", credentials: "include" });
+    await supabase?.auth.signOut();
     setSession(null);
   };
 
-  if (session === null) {
+  if (!supabase) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-ink-900 p-4">
+        <p className="text-slate-400">Supabase not configured.</p>
+      </div>
+    );
+  }
+
+  if (!session) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-ink-900 p-4">
         <div className="text-center">
-          <p className="text-slate-400">You must be logged in as Master to manage users.</p>
+          <p className="text-slate-400">Log in as Master to manage users.</p>
           <Link
             href="/master"
             className="mt-4 inline-block text-gold-400 underline hover:text-gold-300"
@@ -87,6 +123,30 @@ export default function ManageUsersPage() {
             Go to Master Login
           </Link>
         </div>
+      </div>
+    );
+  }
+
+  if (isMaster === false) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-ink-900 p-4">
+        <div className="text-center">
+          <p className="text-slate-400">Access denied. Only Master users can manage users.</p>
+          <Link
+            href="/master"
+            className="mt-4 inline-block text-gold-400 underline hover:text-gold-300"
+          >
+            Back to Master
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (isMaster === null) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-ink-900 p-4">
+        <p className="text-slate-400">Checking access…</p>
       </div>
     );
   }
@@ -99,10 +159,7 @@ export default function ManageUsersPage() {
             <Users className="h-8 w-8" /> Manage Users
           </h1>
           <div className="flex items-center gap-3">
-            <Link
-              href="/master"
-              className="text-sm text-slate-400 hover:text-gold-400"
-            >
+            <Link href="/master" className="text-sm text-slate-400 hover:text-gold-400">
               ← Back to Content
             </Link>
             <button

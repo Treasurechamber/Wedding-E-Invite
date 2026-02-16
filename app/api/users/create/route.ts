@@ -1,7 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
-import { getMasterSession } from "@/lib/auth";
-import { hashPassword } from "@/lib/auth";
 
 export async function POST(request: Request) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -10,8 +8,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Server not configured" }, { status: 500 });
   }
 
-  const session = getMasterSession(request.headers.get("cookie"));
-  if (!session) {
+  const authHeader = request.headers.get("authorization");
+  const token = authHeader?.replace("Bearer ", "");
+  if (!token) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -19,10 +18,15 @@ export async function POST(request: Request) {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
+  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+  if (authError || !user?.email) {
+    return NextResponse.json({ error: "Invalid session" }, { status: 401 });
+  }
+
   const { data: masterRow } = await supabase
     .from("master_users")
     .select("email")
-    .eq("email", session.email)
+    .eq("email", user.email)
     .maybeSingle();
   if (!masterRow) {
     return NextResponse.json({ error: "Master access required" }, { status: 403 });
@@ -53,23 +57,36 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Password must be at least 6 characters" }, { status: 400 });
   }
 
-  const passwordHash = hashPassword(password);
+  const adminSupabase = createClient(url, key, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  const { error: createError } = await adminSupabase.auth.admin.createUser({
+    email: emailNorm,
+    password,
+    email_confirm: true,
+  });
+
+  if (createError) {
+    if (createError.message.includes("already been registered") && roleNorm === "master") {
+      // User exists – ensure in master_users
+    } else if (!createError.message.includes("already been registered")) {
+      return NextResponse.json({ error: createError.message }, { status: 400 });
+    }
+  }
 
   if (roleNorm === "master") {
-    const { error } = await supabase
+    await adminSupabase
       .from("master_users")
-      .upsert({ email: emailNorm, password_hash: passwordHash }, { onConflict: "email" });
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-    return NextResponse.json({ ok: true, message: `Master user ${emailNorm} created` });
+      .upsert({ email: emailNorm }, { onConflict: "email" });
+  } else {
+    await adminSupabase
+      .from("admin_users")
+      .upsert({ email: emailNorm, password_hash: "supabase" }, { onConflict: "email" });
   }
 
-  const { error } = await supabase
-    .from("admin_users")
-    .upsert({ email: emailNorm, password_hash: passwordHash }, { onConflict: "email" });
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-  return NextResponse.json({ ok: true, message: `Admin user ${emailNorm} created` });
+  return NextResponse.json({
+    ok: true,
+    message: `${roleNorm === "master" ? "Master" : "Admin"} user ${emailNorm} created.`,
+  });
 }

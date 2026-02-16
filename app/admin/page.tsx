@@ -1,8 +1,16 @@
 "use client";
 
+import { createClient, Session } from "@supabase/supabase-js";
 import * as XLSX from "xlsx";
 import { LogIn, LogOut, Search, Download } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+const supabase =
+  supabaseUrl && supabaseKey
+    ? createClient(supabaseUrl, supabaseKey, { auth: { storageKey: "sb-admin-auth" } })
+    : null;
 
 type RSVP = {
   id: string;
@@ -19,8 +27,6 @@ type RSVP = {
   message: string | null;
 };
 
-type Session = { role: string; email: string } | null;
-
 export default function AdminPage() {
   const [session, setSession] = useState<Session | null>(null);
   const [email, setEmail] = useState("");
@@ -31,52 +37,45 @@ export default function AdminPage() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "attending" | "declined">("all");
 
-  const fetchSession = useCallback(async () => {
-    const res = await fetch("/api/auth/session?role=admin", { credentials: "include" });
-    const data = await res.json().catch(() => ({}));
-    if (data.email) setSession({ role: "admin", email: data.email });
-    else setSession(null);
-  }, []);
-
-  const fetchRsvps = useCallback(async () => {
-    const res = await fetch("/api/admin/rsvps", { credentials: "include" });
-    if (res.ok) {
-      const data = await res.json();
-      setRsvps(data ?? []);
-    }
+  useEffect(() => {
+    if (!supabase) return;
+    supabase.auth.getSession().then(({ data: { session } }) => setSession(session ?? null));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, s) => setSession(s ?? null));
+    return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
-    fetchSession();
-  }, [fetchSession]);
-
-  useEffect(() => {
-    if (!session) return;
-    fetchRsvps();
-    const id = setInterval(fetchRsvps, 10000);
-    return () => clearInterval(id);
-  }, [session, fetchRsvps]);
+    if (!supabase || !session) return;
+    supabase
+      .from("rsvps")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .then(({ data, error: e }) => {
+        if (!e) setRsvps((data ?? []) as RSVP[]);
+      });
+    const ch = supabase
+      .channel("rsvps")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "rsvps" }, () => {
+        supabase.from("rsvps").select("*").order("created_at", { ascending: false }).then(({ data }) => {
+          if (data) setRsvps(data as RSVP[]);
+        });
+      })
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
+  }, [supabase, session]);
 
   const login = async () => {
     setLoading(true);
     setError("");
-    const res = await fetch("/api/auth/admin-login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: email.trim(), password }),
-      credentials: "include",
-    });
+    const { error: e } = await supabase!.auth.signInWithPassword({ email: email.trim(), password });
     setLoading(false);
-    const data = await res.json().catch(() => ({}));
-    if (res.ok) {
-      setSession({ role: "admin", email: data.email ?? email });
-    } else {
-      setError(data.error ?? "Login failed");
-    }
+    if (e) setError(e.message);
   };
 
   const logout = async () => {
-    await fetch("/api/auth/logout?role=admin", { method: "POST", credentials: "include" });
+    await supabase?.auth.signOut();
     setSession(null);
   };
 
@@ -100,15 +99,7 @@ export default function AdminPage() {
   };
 
   const exportXlsx = () => {
-    const headers = [
-      "Name",
-      "Email",
-      "Phone",
-      "Attending",
-      "Guests",
-      "Plus One",
-      "Message",
-    ];
+    const headers = ["Name", "Email", "Phone", "Attending", "Guests", "Plus One", "Message"];
     const rows = filtered.map((r) => [
       r.full_name,
       r.email,
@@ -123,6 +114,14 @@ export default function AdminPage() {
     XLSX.utils.book_append_sheet(wb, ws, "RSVPs");
     XLSX.writeFile(wb, "rsvps.xlsx");
   };
+
+  if (!supabase) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-ink-900 p-4">
+        <p className="text-slate-400">Supabase not configured.</p>
+      </div>
+    );
+  }
 
   if (!session) {
     return (
@@ -162,16 +161,13 @@ export default function AdminPage() {
       <div className="mx-auto max-w-5xl">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h1 className="font-script text-3xl text-gold-400">RSVP Admin</h1>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={logout}
-              className="flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2 text-sm text-slate-300 hover:bg-ink-800"
-            >
-              <LogOut className="h-4 w-4" /> Sign Out
-            </button>
-          </div>
+          <button
+            onClick={logout}
+            className="flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2 text-sm text-slate-300 hover:bg-ink-800"
+          >
+            <LogOut className="h-4 w-4" /> Sign Out
+          </button>
         </div>
-
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-xl border border-white/10 bg-ink-800/60 p-4">
             <p className="text-sm text-slate-400">Total RSVPs</p>
@@ -190,7 +186,6 @@ export default function AdminPage() {
             <p className="text-2xl font-semibold text-gold-400">{stats.guests}</p>
           </div>
         </div>
-
         <div className="mt-8 flex flex-wrap gap-4">
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -218,7 +213,6 @@ export default function AdminPage() {
             <Download className="h-4 w-4" /> Export XLSX
           </button>
         </div>
-
         <div className="mt-8 overflow-x-auto rounded-xl border border-white/10">
           <table className="w-full text-left">
             <thead>
