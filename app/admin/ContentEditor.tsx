@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { WeddingContent } from "../../lib/content-types";
+import type { ThemeId, WeddingContent } from "../../lib/content-types";
+import { THEMES } from "../../lib/themes";
 import { ImageUpload } from "./ImageUpload";
 
 const DEFAULT_CONTENT: WeddingContent = {
+  theme: "gold",
   coupleNames: "Sophia & Alexander",
   coupleInitials: "S & A",
   weddingDate: "2025-09-14T16:00:00",
@@ -48,9 +50,10 @@ const DEFAULT_CONTENT: WeddingContent = {
 type ContentEditorProps = {
   supabase: import("@supabase/supabase-js").SupabaseClient;
   accessToken?: string | null;
+  weddingId?: string;
 };
 
-export function ContentEditor({ supabase, accessToken }: ContentEditorProps) {
+export function ContentEditor({ supabase, accessToken, weddingId = "default" }: ContentEditorProps) {
   const [content, setContent] = useState<WeddingContent | null>(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -61,7 +64,7 @@ export function ContentEditor({ supabase, accessToken }: ContentEditorProps) {
         const res = await supabase
           .from("wedding_content")
           .select("data")
-          .eq("id", "default")
+          .eq("id", weddingId)
           .maybeSingle();
         const row = res.data as { data: WeddingContent } | null;
         if (row?.data) {
@@ -73,7 +76,7 @@ export function ContentEditor({ supabase, accessToken }: ContentEditorProps) {
         setContent(DEFAULT_CONTENT);
       }
     })();
-  }, [supabase]);
+  }, [supabase, weddingId]);
 
   const save = async () => {
     if (!content) return;
@@ -84,7 +87,7 @@ export function ContentEditor({ supabase, accessToken }: ContentEditorProps) {
     const res = await fetch("/api/master/save", {
       method: "POST",
       headers,
-      body: JSON.stringify({ data: content }),
+      body: JSON.stringify({ data: content, wedding_id: weddingId }),
       credentials: "include",
     });
     const data = await res.json().catch(() => ({}));
@@ -148,7 +151,21 @@ export function ContentEditor({ supabase, accessToken }: ContentEditorProps) {
 
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-4 rounded-xl border border-white/10 bg-ink-800/60 p-6">
-          <h3 className="font-serif text-sm text-gold-400">Couple & Dates</h3>
+          <h3 className="font-serif text-sm text-gold-400">Theme & Couple</h3>
+          <div>
+            <label className="block text-xs text-slate-400">Theme</label>
+            <select
+              value={content.theme ?? "gold"}
+              onChange={(e) => update("theme", e.target.value as ThemeId)}
+              className="mt-1 w-full rounded-lg border border-white/10 bg-ink-900/80 px-3 py-2 text-champagne-50 focus:border-gold-500/50 focus:outline-none"
+            >
+              {THEMES.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+          </div>
           <Field label="Couple Names" value={content.coupleNames} onChange={(v) => update("coupleNames", v)} />
           <Field label="Initials (envelope seal)" value={content.coupleInitials} onChange={(v) => update("coupleInitials", v)} />
           <Field label="Wedding Date (YYYY-MM-DD)" value={(content.weddingDate || "").split("T")[0] || ""} onChange={(v) => update("weddingDate", (v && v.trim()) ? v.trim() + "T16:00:00" : "2025-09-14T16:00:00")} />

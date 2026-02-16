@@ -1,9 +1,10 @@
 "use client";
 
 import { createClient, Session } from "@supabase/supabase-js";
-import { LogIn, LogOut, Users } from "lucide-react";
+import { LogIn, LogOut, Users, Plus } from "lucide-react";
+import { THEMES } from "../../lib/themes";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ContentEditor } from "../admin/ContentEditor";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
@@ -13,6 +14,8 @@ const supabase =
     ? createClient(supabaseUrl, supabaseKey, { auth: { storageKey: "sb-master-auth" } })
     : null;
 
+type Wedding = { id: string; coupleNames: string };
+
 export default function MasterPage() {
   const [session, setSession] = useState<Session | null>(null);
   const [email, setEmail] = useState("");
@@ -20,6 +23,23 @@ export default function MasterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [isMaster, setIsMaster] = useState<boolean | null>(null);
+  const [weddings, setWeddings] = useState<Wedding[]>([]);
+  const [selectedWedding, setSelectedWedding] = useState<string>("default");
+  const [showCreate, setShowCreate] = useState(false);
+  const [newSlug, setNewSlug] = useState("");
+  const [newCoupleNames, setNewCoupleNames] = useState("");
+  const [newAdminEmails, setNewAdminEmails] = useState("");
+  const [newTheme, setNewTheme] = useState<"gold" | "rose" | "minimal">("gold");
+
+  const fetchWeddings = useCallback(async () => {
+    const res = await fetch("/api/weddings/list");
+    const data = await res.json().catch(() => ({}));
+    const list = (data.weddings ?? []) as Wedding[];
+    setWeddings(list);
+    if (list.length > 0 && !list.some((w) => w.id === selectedWedding)) {
+      setSelectedWedding(list[0].id);
+    }
+  }, [selectedWedding]);
 
   useEffect(() => {
     if (!supabase) return;
@@ -41,6 +61,10 @@ export default function MasterPage() {
       .then(({ data }) => setIsMaster(!!data));
   }, [session]);
 
+  useEffect(() => {
+    if (session && isMaster) fetchWeddings();
+  }, [session, isMaster, fetchWeddings]);
+
   const login = async () => {
     setLoading(true);
     setError("");
@@ -53,6 +77,44 @@ export default function MasterPage() {
     await supabase?.auth.signOut();
     setSession(null);
     setIsMaster(null);
+  };
+
+  const createWedding = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!session?.access_token) return;
+    const slug = newSlug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "-") || "wedding";
+    const adminEmails = newAdminEmails
+      .split(/[,;\s]+/)
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
+    setLoading(true);
+    setError("");
+    const res = await fetch("/api/weddings/create", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({
+        slug,
+        coupleNames: newCoupleNames || "New Couple",
+        adminEmails,
+        theme: newTheme,
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setLoading(false);
+    if (res.ok) {
+      setShowCreate(false);
+      setNewSlug("");
+      setNewCoupleNames("");
+      setNewAdminEmails("");
+      setNewTheme("gold");
+      fetchWeddings();
+      setSelectedWedding(data.slug ?? slug);
+    } else {
+      setError(data.error ?? "Failed to create");
+    }
   };
 
   if (!supabase) {
@@ -99,11 +161,9 @@ export default function MasterPage() {
   if (isMaster === false) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-ink-900 p-4">
-        <div className="w-full max-w-md rounded-2xl border border-amber-500/30 bg-ink-800/80 p-8 text-center">
+        <div className="max-w-md rounded-2xl border border-amber-500/30 bg-ink-800/80 p-8 text-center">
           <h1 className="font-script text-2xl text-amber-400">Access Denied</h1>
-          <p className="mt-3 text-slate-300">
-            Your account does not have permission. Add your email to master_users first.
-          </p>
+          <p className="mt-3 text-slate-300">Add your email to master_users first.</p>
           <button
             onClick={logout}
             className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 px-4 py-3 text-slate-300 hover:bg-ink-800"
@@ -128,7 +188,27 @@ export default function MasterPage() {
       <div className="mx-auto max-w-5xl">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h1 className="font-script text-3xl text-gold-400">Master Content</h1>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            {weddings.length > 0 && (
+              <select
+                value={selectedWedding}
+                onChange={(e) => setSelectedWedding(e.target.value)}
+                className="rounded-xl border border-white/10 bg-ink-800/80 px-4 py-2 text-champagne-50 focus:border-gold-500/50 focus:outline-none"
+              >
+                {weddings.map((w) => (
+                  <option key={w.id} value={w.id}>
+                    {w.coupleNames} ({w.id})
+                  </option>
+                ))}
+              </select>
+            )}
+            <button
+              type="button"
+              onClick={() => setShowCreate(!showCreate)}
+              className="flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2 text-sm text-slate-300 hover:bg-ink-800"
+            >
+              <Plus className="h-4 w-4" /> New Wedding
+            </button>
             <Link
               href="/manage"
               className="flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2 text-sm text-slate-300 hover:bg-ink-800"
@@ -143,9 +223,80 @@ export default function MasterPage() {
             </button>
           </div>
         </div>
-        <div className="mt-8">
-          <ContentEditor supabase={supabase} accessToken={session?.access_token} />
-        </div>
+
+        {showCreate && (
+          <form onSubmit={createWedding} className="mt-6 rounded-2xl border border-gold-500/30 bg-ink-800/60 p-6">
+            <h2 className="font-serif text-lg text-gold-400 mb-4">Create Wedding</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Theme</label>
+                <select
+                  value={newTheme}
+                  onChange={(e) => setNewTheme(e.target.value as "gold" | "rose" | "minimal")}
+                  className="w-full rounded-xl border border-white/10 bg-ink-900/80 px-4 py-2 text-champagne-50 focus:border-gold-500/50 focus:outline-none"
+                >
+                  {THEMES.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">URL slug (e.g. anthony-yara)</label>
+                <input
+                  type="text"
+                  value={newSlug}
+                  onChange={(e) => setNewSlug(e.target.value)}
+                  placeholder="anthony-yara"
+                  className="w-full rounded-xl border border-white/10 bg-ink-900/80 px-4 py-2 text-champagne-50 placeholder-slate-500 focus:border-gold-500/50 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Couple names</label>
+                <input
+                  type="text"
+                  value={newCoupleNames}
+                  onChange={(e) => setNewCoupleNames(e.target.value)}
+                  placeholder="Anthony & Yara"
+                  className="w-full rounded-xl border border-white/10 bg-ink-900/80 px-4 py-2 text-champagne-50 placeholder-slate-500 focus:border-gold-500/50 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Admin emails (comma-separated) – couple can view RSVPs</label>
+                <input
+                  type="text"
+                  value={newAdminEmails}
+                  onChange={(e) => setNewAdminEmails(e.target.value)}
+                  placeholder="couple@example.com, spouse@example.com"
+                  className="w-full rounded-xl border border-white/10 bg-ink-900/80 px-4 py-2 text-champagne-50 placeholder-slate-500 focus:border-gold-500/50 focus:outline-none"
+                />
+              </div>
+              {error && <p className="text-amber-400">{error}</p>}
+              <div className="flex gap-2">
+                <button type="submit" disabled={loading} className="rounded-xl bg-gold-500 px-6 py-2 text-ink-900 hover:bg-gold-400 disabled:opacity-70">
+                  Create
+                </button>
+                <button type="button" onClick={() => setShowCreate(false)} className="rounded-xl border border-white/10 px-6 py-2 text-slate-400 hover:bg-ink-800">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </form>
+        )}
+
+        {weddings.length > 0 && (
+          <div className="mt-8">
+            <p className="mb-2 text-sm text-slate-400">
+              Editing: {selectedWedding} · <a href={`/${selectedWedding}`} target="_blank" rel="noopener noreferrer" className="text-gold-400 hover:underline">View live</a>
+            </p>
+            <ContentEditor supabase={supabase} accessToken={session?.access_token} weddingId={selectedWedding} />
+          </div>
+        )}
+
+        {weddings.length === 0 && !showCreate && (
+          <p className="mt-8 text-slate-400">No weddings yet. Click &quot;New Wedding&quot; to create one.</p>
+        )}
       </div>
     </div>
   );

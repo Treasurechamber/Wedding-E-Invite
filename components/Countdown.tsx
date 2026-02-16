@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { useContent } from "./ContentProvider";
 
 // June 5, 2026 4:00 PM - use explicit construction so it always works
 const FALLBACK_TARGET = new Date(2026, 5, 5, 16, 0, 0);
@@ -70,14 +71,14 @@ function Block({ value, label }: { value: number; label: string }) {
   return (
     <motion.div
       layout
-      className="flex flex-col items-center gap-1 rounded-2xl border border-white/10 bg-ink-800/80 px-4 py-6 backdrop-blur-sm md:px-6 md:py-8"
+      className="flex flex-col items-center gap-1 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-light)] px-4 py-6 backdrop-blur-sm md:px-6 md:py-8"
       whileHover={{ scale: 1.03 }}
       transition={{ type: "spring", stiffness: 300, damping: 20 }}
     >
-      <span className="font-sans text-3xl font-semibold tabular-nums text-gold-400 md:text-4xl">
+      <span className="font-sans text-3xl font-semibold tabular-nums text-[var(--color-primary)] md:text-4xl">
         {s}
       </span>
-      <span className="text-[0.7rem] uppercase tracking-[0.25em] text-slate-400">
+      <span className="text-[0.7rem] uppercase tracking-[0.25em] text-[var(--color-muted)]">
         {label}
       </span>
     </motion.div>
@@ -85,27 +86,20 @@ function Block({ value, label }: { value: number; label: string }) {
 }
 
 export function Countdown() {
-  const [dateStr, setDateStr] = useState("2026-06-05T16:00:00");
+  const content = useContent();
+  const dateStr = content?.weddingDate || content?.weddingDateDisplay || "2026-06-05T16:00:00";
 
-  useEffect(() => {
-    fetch("/api/content")
-      .then((r) => r.json())
-      .then((data) => {
-        const d = data?.weddingDate || data?.weddingDateDisplay;
-        if (d && String(d).trim()) setDateStr(String(d).trim());
-      })
-      .catch(() => {});
-  }, []);
-
-  const { days, hours, minutes, seconds } = useCountdown(dateStr);
+  const { days, hours, minutes, seconds } = useCountdown(
+    typeof dateStr === "string" ? dateStr : "2026-06-05T16:00:00"
+  );
 
   return (
     <section className="relative py-20 md:py-28">
       <div className="mx-auto max-w-4xl px-4 text-center">
-        <h2 className="font-script text-4xl text-gold-400 md:text-5xl">
+        <h2 className="font-script text-4xl text-[var(--color-primary)] md:text-5xl">
           Counting the Days
         </h2>
-        <p className="mt-3 font-serif text-sm tracking-[0.2em] text-slate-400">
+        <p className="mt-3 font-serif text-sm tracking-[0.2em] text-[var(--color-muted)]">
           Until We Say I Do
         </p>
         <div className="mt-12 flex flex-wrap justify-center gap-4 md:gap-6">

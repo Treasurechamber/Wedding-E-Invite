@@ -12,7 +12,9 @@ const NO_CACHE = {
   Pragma: "no-cache",
 };
 
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const weddingId = searchParams.get("wedding") || "default";
   if (!supabaseUrl || !supabaseAnonKey) {
     return NextResponse.json(
       {
@@ -66,7 +68,7 @@ export async function GET() {
   const { data, error } = await supabase
     .from("wedding_content")
     .select("data")
-    .eq("id", "default")
+    .eq("id", weddingId)
     .maybeSingle();
 
   if (error || !data?.data) {

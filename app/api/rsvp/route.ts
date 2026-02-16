@@ -16,7 +16,9 @@ export async function POST(request: Request) {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    const weddingId = body.wedding_id || "default";
     const { error } = await supabase.from("rsvps").insert({
+      wedding_id: weddingId,
       full_name: body.full_name,
       email: body.email,
       phone: body.phone,

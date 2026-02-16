@@ -13,6 +13,8 @@ export function DocumentTitle() {
       document.title = "Dashboard";
     } else if (pathname?.startsWith("/admin")) {
       document.title = "Admin";
+    } else if (pathname && !pathname.startsWith("/manage") && pathname !== "/") {
+      document.title = `${content.coupleNames} · Wedding Invitation`;
     } else if (pathname === "/") {
       document.title = `${content.coupleNames} · Wedding Invitation`;
     }

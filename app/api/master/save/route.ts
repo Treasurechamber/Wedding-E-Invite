@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Master access required" }, { status: 403 });
   }
 
-  let body: { data?: unknown };
+  let body: { data?: unknown; wedding_id?: string };
   try {
     body = await request.json();
   } catch {
@@ -45,10 +45,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing data" }, { status: 400 });
   }
 
+  const weddingId = body.wedding_id || "default";
+
   const { error } = await supabase
     .from("wedding_content")
     .upsert(
-      { id: "default", data: body.data, updated_at: new Date().toISOString() },
+      { id: weddingId, data: body.data, updated_at: new Date().toISOString() },
       { onConflict: "id" }
     );
 

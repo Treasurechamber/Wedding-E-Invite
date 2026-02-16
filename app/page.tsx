@@ -1,29 +1,16 @@
 "use client";
 
-import { Countdown } from "../components/Countdown";
-import { EnvelopeGate } from "../components/EnvelopeGate";
-import { Footer } from "../components/Footer";
-import { HeroCarousel } from "../components/HeroCarousel";
-import { RSVPForm } from "../components/RSVPForm";
-import { ScheduleSection } from "../components/ScheduleSection";
-import { VenueSection } from "../components/VenueSection";
-import { useState } from "react";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
-export default function Page() {
-  const [gateDone, setGateDone] = useState(false);
-
+export default function RootPage() {
+  const router = useRouter();
+  useEffect(() => {
+    router.replace("/default");
+  }, [router]);
   return (
-    <>
-      <main>
-        <HeroCarousel />
-        <Countdown />
-        <VenueSection />
-        <ScheduleSection />
-        <RSVPForm />
-        <Footer />
-      </main>
-      {!gateDone && <EnvelopeGate onOpened={() => setGateDone(true)} />}
-    </>
+    <div className="flex min-h-screen items-center justify-center bg-ink-900">
+      <p className="text-slate-400">Redirecting…</p>
+    </div>
   );
 }
-

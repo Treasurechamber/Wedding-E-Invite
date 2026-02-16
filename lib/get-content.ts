@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 
-export async function getWeddingContent() {
+export async function getWeddingContent(weddingId = "default") {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key) return null;
@@ -9,7 +9,7 @@ export async function getWeddingContent() {
   const { data } = await supabase
     .from("wedding_content")
     .select("data")
-    .eq("id", "default")
+    .eq("id", weddingId)
     .maybeSingle();
 
   return (data?.data as { coupleNames?: string } | null) ?? null;

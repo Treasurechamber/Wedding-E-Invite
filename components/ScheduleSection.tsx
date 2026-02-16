@@ -21,10 +21,10 @@ export function ScheduleSection() {
   return (
     <section className="relative py-20 md:py-28">
       <div className="mx-auto max-w-4xl px-4">
-        <h2 className="font-script text-4xl text-gold-400 md:text-5xl">
+        <h2 className="font-script text-4xl text-[var(--color-primary)] md:text-5xl">
           Day of Events
         </h2>
-        <p className="mt-3 font-serif text-sm tracking-[0.2em] text-slate-400">
+        <p className="mt-3 font-serif text-sm tracking-[0.2em] text-[var(--color-muted)]">
           {content.weddingDateDisplay}
         </p>
 
@@ -41,14 +41,14 @@ export function ScheduleSection() {
               className="relative flex items-start gap-6 py-5"
             >
               {i < events.length - 1 && (
-                <div className="absolute left-5 top-14 bottom-0 w-px bg-gradient-to-b from-gold-500/50 to-transparent" />
+                <div className="absolute left-5 top-14 bottom-0 w-px bg-gradient-to-b from-[var(--color-primary)]/50 to-transparent" />
               )}
-              <div className="relative z-10 grid h-10 w-10 shrink-0 place-items-center rounded-full border border-gold-500/40 bg-ink-800/80">
-                <Icon className="h-5 w-5 text-gold-400" />
+              <div className="relative z-10 grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[var(--color-primary)]/40 bg-[var(--color-surface-light)]">
+                <Icon className="h-5 w-5 text-[var(--color-primary)]" />
               </div>
               <div>
-                <p className="font-serif text-sm text-gold-400">{time}</p>
-                <h3 className="mt-1 font-serif text-lg text-champagne-50">
+                <p className="font-serif text-sm text-[var(--color-primary)]">{time}</p>
+                <h3 className="mt-1 font-serif text-lg text-[var(--color-text)]">
                   {title}
                 </h3>
               </div>
@@ -66,7 +66,7 @@ export function ScheduleSection() {
           {venueCards.map((card) => (
             <div
               key={card.title}
-              className="overflow-hidden rounded-2xl border border-white/10 bg-ink-800/60"
+              className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-light)]"
             >
               <div className="relative h-44 w-full">
                 <Image
@@ -76,13 +76,13 @@ export function ScheduleSection() {
                   sizes="(min-width: 768px) 50vw, 100vw"
                   className="object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-ink-900/85 via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-bg)]/85 via-transparent to-transparent" />
               </div>
               <div className="px-5 pb-5 pt-4 text-left">
-                <p className="text-xs font-serif uppercase tracking-[0.28em] text-gold-400">
+                <p className="text-xs font-serif uppercase tracking-[0.28em] text-[var(--color-primary)]">
                   {card.subtitle}
                 </p>
-                <p className="mt-1 font-serif text-lg text-champagne-50">
+                <p className="mt-1 font-serif text-lg text-[var(--color-text)]">
                   {card.title}
                 </p>
               </div>

@@ -14,6 +14,7 @@ const supabase =
 
 type RSVP = {
   id: string;
+  wedding_id?: string;
   created_at: string;
   full_name: string;
   email: string;
@@ -33,6 +34,8 @@ export default function AdminPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [weddings, setWeddings] = useState<{ wedding_id: string }[]>([]);
+  const [selectedWedding, setSelectedWedding] = useState<string>("");
   const [rsvps, setRsvps] = useState<RSVP[]>([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "attending" | "declined">("all");
@@ -45,26 +48,44 @@ export default function AdminPage() {
   }, []);
 
   useEffect(() => {
-    if (!supabase || !session) return;
+    if (!supabase || !session?.user?.email) return;
+    supabase
+      .from("wedding_admins")
+      .select("wedding_id")
+      .eq("email", session.user.email)
+      .then(({ data }) => {
+        const list = (data ?? []) as { wedding_id: string }[];
+        setWeddings(list);
+        if (list.length > 0 && !selectedWedding) setSelectedWedding(list[0].wedding_id);
+      });
+  }, [supabase, session]);
+
+  useEffect(() => {
+    if (!supabase || !session || !selectedWedding) {
+      setRsvps([]);
+      return;
+    }
     supabase
       .from("rsvps")
       .select("*")
+      .eq("wedding_id", selectedWedding)
       .order("created_at", { ascending: false })
       .then(({ data, error: e }) => {
         if (!e) setRsvps((data ?? []) as RSVP[]);
       });
     const ch = supabase
-      .channel("rsvps")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "rsvps" }, () => {
-        supabase.from("rsvps").select("*").order("created_at", { ascending: false }).then(({ data }) => {
-          if (data) setRsvps(data as RSVP[]);
-        });
+      .channel(`rsvps-${selectedWedding}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "rsvps" }, (payload) => {
+        const row = payload.new as RSVP;
+        if (row.wedding_id === selectedWedding) {
+          setRsvps((prev) => [row, ...prev]);
+        }
       })
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
     };
-  }, [supabase, session]);
+  }, [supabase, session, selectedWedding]);
 
   const login = async () => {
     setLoading(true);
@@ -112,7 +133,7 @@ export default function AdminPage() {
     const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "RSVPs");
-    XLSX.writeFile(wb, "rsvps.xlsx");
+    XLSX.writeFile(wb, `rsvps-${selectedWedding}.xlsx`);
   };
 
   if (!supabase) {
@@ -128,7 +149,7 @@ export default function AdminPage() {
       <div className="flex min-h-screen items-center justify-center bg-ink-900 p-4">
         <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-ink-800/80 p-8">
           <h1 className="font-script text-2xl text-gold-400">Admin Login</h1>
-          <p className="mt-1 text-sm text-slate-400">Sign in to manage RSVPs</p>
+          <p className="mt-1 text-sm text-slate-400">Sign in to view your wedding&apos;s RSVPs</p>
           <input
             type="email"
             placeholder="Email"
@@ -156,18 +177,53 @@ export default function AdminPage() {
     );
   }
 
+  if (weddings.length === 0) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-ink-900 p-4">
+        <div className="text-center">
+          <h1 className="font-script text-2xl text-amber-400">No weddings assigned</h1>
+          <p className="mt-3 text-slate-400">Ask the Master to add you as admin for your wedding.</p>
+          <button
+            onClick={logout}
+            className="mt-6 rounded-xl border border-white/10 px-6 py-2 text-slate-300 hover:bg-ink-800"
+          >
+            Sign Out
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-ink-900 p-4 md:p-8">
       <div className="mx-auto max-w-5xl">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h1 className="font-script text-3xl text-gold-400">RSVP Admin</h1>
-          <button
-            onClick={logout}
-            className="flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2 text-sm text-slate-300 hover:bg-ink-800"
-          >
-            <LogOut className="h-4 w-4" /> Sign Out
-          </button>
+          <div className="flex items-center gap-3">
+            {weddings.length > 1 && (
+              <select
+                value={selectedWedding}
+                onChange={(e) => setSelectedWedding(e.target.value)}
+                className="rounded-xl border border-white/10 bg-ink-800/80 px-4 py-2 text-champagne-50 focus:border-gold-500/50 focus:outline-none"
+              >
+                {weddings.map((w) => (
+                  <option key={w.wedding_id} value={w.wedding_id}>
+                    {w.wedding_id}
+                  </option>
+                ))}
+              </select>
+            )}
+            <button
+              onClick={logout}
+              className="flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2 text-sm text-slate-300 hover:bg-ink-800"
+            >
+              <LogOut className="h-4 w-4" /> Sign Out
+            </button>
+          </div>
         </div>
+        {weddings.length === 1 && (
+          <p className="mt-2 text-sm text-slate-400">Wedding: {selectedWedding}</p>
+        )}
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-xl border border-white/10 bg-ink-800/60 p-4">
             <p className="text-sm text-slate-400">Total RSVPs</p>

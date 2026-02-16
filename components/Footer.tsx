@@ -64,17 +64,17 @@ export function Footer() {
   }, []);
 
   return (
-    <footer className="border-t border-white/5 py-8">
+    <footer className="border-t border-[var(--color-border)] py-8">
       <div className="mx-auto flex max-w-5xl flex-col items-center justify-center gap-4 px-4 text-center">
         <button
           type="button"
           onClick={handleInitialsClick}
-          className="font-script text-2xl text-gold-400/80 transition hover:text-gold-400"
+          className="font-script text-2xl text-[var(--color-primary)]/80 transition hover:text-[var(--color-primary)]"
           aria-label={content.coupleNames}
         >
           {content.coupleNames}
         </button>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-[var(--color-muted)]">
           {hashtagFromNames(content.coupleNames, content.weddingDate) || content.hashtag}
         </p>
       </div>

@@ -1,4 +1,7 @@
+export type ThemeId = "gold" | "rose" | "minimal";
+
 export type WeddingContent = {
+  theme?: ThemeId;
   coupleNames: string;
   coupleInitials: string;
   weddingDate: string;

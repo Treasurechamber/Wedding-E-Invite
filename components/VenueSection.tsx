@@ -16,10 +16,10 @@ export function VenueSection() {
   return (
     <section className="relative py-20 md:py-28">
       <div className="mx-auto max-w-5xl px-4">
-        <h2 className="font-script text-4xl text-gold-400 md:text-5xl">
+        <h2 className="font-script text-4xl text-[var(--color-primary)] md:text-5xl">
           Join Us
         </h2>
-        <p className="mt-3 font-serif text-sm tracking-[0.2em] text-slate-400">
+        <p className="mt-3 font-serif text-sm tracking-[0.2em] text-[var(--color-muted)]">
           Ceremony &amp; Reception
         </p>
 
@@ -29,18 +29,18 @@ export function VenueSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="rounded-2xl border border-white/10 bg-ink-800/60 p-6 backdrop-blur-sm md:p-8"
+            className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-light)] p-6 backdrop-blur-sm md:p-8"
           >
-            <p className="font-serif text-xs uppercase tracking-[0.3em] text-gold-400">
+            <p className="font-serif text-xs uppercase tracking-[0.3em] text-[var(--color-primary)]">
               Ceremony
             </p>
-            <h3 className="mt-2 font-serif text-xl text-champagne-50">
+            <h3 className="mt-2 font-serif text-xl text-[var(--color-text)]">
               {ceremony.name}
             </h3>
-            <p className="mt-2 font-sans text-sm text-slate-300">
+            <p className="mt-2 font-sans text-sm text-[var(--color-muted)]">
               {ceremony.time}
             </p>
-            <div className="mt-4 flex items-start gap-2 text-slate-400">
+            <div className="mt-4 flex items-start gap-2 text-[var(--color-muted)]">
               <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
               <span className="text-sm">{ceremony.address}</span>
             </div>
@@ -48,7 +48,7 @@ export function VenueSection() {
               href={ceremony.mapUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-6 inline-flex items-center gap-2 text-sm text-gold-400 transition hover:text-gold-300"
+              className="mt-6 inline-flex items-center gap-2 text-sm text-[var(--color-primary)] transition opacity-90 hover:opacity-100"
             >
               Get Directions <ExternalLink className="h-4 w-4" />
             </a>
@@ -59,18 +59,18 @@ export function VenueSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="rounded-2xl border border-white/10 bg-ink-800/60 p-6 backdrop-blur-sm md:p-8"
+            className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-light)] p-6 backdrop-blur-sm md:p-8"
           >
-            <p className="font-serif text-xs uppercase tracking-[0.3em] text-gold-400">
+            <p className="font-serif text-xs uppercase tracking-[0.3em] text-[var(--color-primary)]">
               Reception
             </p>
-            <h3 className="mt-2 font-serif text-xl text-champagne-50">
+            <h3 className="mt-2 font-serif text-xl text-[var(--color-text)]">
               {reception.name}
             </h3>
-            <p className="mt-2 font-sans text-sm text-slate-300">
+            <p className="mt-2 font-sans text-sm text-[var(--color-muted)]">
               {reception.time}
             </p>
-            <div className="mt-4 flex items-start gap-2 text-slate-400">
+            <div className="mt-4 flex items-start gap-2 text-[var(--color-muted)]">
               <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
               <span className="text-sm">{reception.address}</span>
             </div>
@@ -78,7 +78,7 @@ export function VenueSection() {
               href={reception.mapUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-6 inline-flex items-center gap-2 text-sm text-gold-400 transition hover:text-gold-300"
+              className="mt-6 inline-flex items-center gap-2 text-sm text-[var(--color-primary)] transition opacity-90 hover:opacity-100"
             >
               Get Directions <ExternalLink className="h-4 w-4" />
             </a>
@@ -89,7 +89,7 @@ export function VenueSection() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mt-12 overflow-hidden rounded-2xl border border-white/10"
+          className="mt-12 overflow-hidden rounded-2xl border border-[var(--color-border)]"
         >
           <iframe
             title="Wedding venue map"

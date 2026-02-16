@@ -16,7 +16,9 @@ type FormData = {
   message: string;
 };
 
-export function RSVPForm() {
+type RSVPFormProps = { weddingId?: string };
+
+export function RSVPForm({ weddingId = "default" }: RSVPFormProps) {
   const content = useContent();
   const [submitted, setSubmitted] = useState(false);
   const {
@@ -33,6 +35,7 @@ export function RSVPForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          wedding_id: weddingId,
           full_name: data.fullName,
           email: data.email,
           phone: data.phone || null,
@@ -53,13 +56,13 @@ export function RSVPForm() {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="rounded-3xl border border-white/10 bg-ink-800/60 p-12 text-center backdrop-blur-sm"
+        className="rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface-light)] p-12 text-center backdrop-blur-sm"
       >
-        <Heart className="mx-auto h-14 w-14 text-gold-400" />
-        <h3 className="mt-4 font-script text-3xl text-gold-400">
+        <Heart className="mx-auto h-14 w-14 text-[var(--color-primary)]" />
+        <h3 className="mt-4 font-script text-3xl text-[var(--color-primary)]">
           Thank You!
         </h3>
-        <p className="mt-2 font-serif text-slate-300">
+        <p className="mt-2 font-serif text-[var(--color-text)]">
           Your response has been received. We can&apos;t wait to celebrate with you!
         </p>
       </motion.div>
@@ -69,10 +72,10 @@ export function RSVPForm() {
   return (
     <section className="relative py-20 md:py-28">
       <div className="mx-auto max-w-2xl px-4">
-        <h2 className="font-script text-4xl text-gold-400 md:text-5xl">
+        <h2 className="font-script text-4xl text-[var(--color-primary)] md:text-5xl">
           Kindly Respond
         </h2>
-        <p className="mt-3 font-serif text-sm tracking-[0.2em] text-slate-400">
+        <p className="mt-3 font-serif text-sm tracking-[0.2em] text-[var(--color-muted)]">
           Please RSVP by {content.rsvpDeadline}
         </p>
 
@@ -81,19 +84,19 @@ export function RSVPForm() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           onSubmit={handleSubmit(onSubmit)}
-          className="mt-12 space-y-6 rounded-3xl border border-white/10 bg-ink-800/60 p-6 backdrop-blur-sm md:p-10"
+          className="mt-12 space-y-6 rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface-light)] p-6 backdrop-blur-sm md:p-10"
         >
           <div>
             <label
               htmlFor="fullName"
-              className="block text-sm font-medium text-slate-300"
+              className="block text-sm font-medium text-[var(--color-muted)]"
             >
               Full Name(s) *
             </label>
             <input
               id="fullName"
               {...register("fullName", { required: "Required" })}
-              className="mt-2 w-full rounded-xl border border-white/10 bg-ink-900/80 px-4 py-3 text-champagne-50 placeholder-slate-500 focus:border-gold-500/50 focus:outline-none focus:ring-1 focus:ring-gold-500/50"
+              className="mt-2 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]/80 px-4 py-3 text-[var(--color-text)] placeholder-[var(--color-muted)]/60 focus:border-[var(--color-primary)]/50 focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]/50"
               placeholder="John & Jane Smith"
             />
             {errors.fullName && (
@@ -104,7 +107,7 @@ export function RSVPForm() {
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-slate-300"
+              className="block text-sm font-medium text-[var(--color-muted)]"
             >
               Email *
             </label>
@@ -112,7 +115,7 @@ export function RSVPForm() {
               id="email"
               type="email"
               {...register("email", { required: "Required" })}
-              className="mt-2 w-full rounded-xl border border-white/10 bg-ink-900/80 px-4 py-3 text-champagne-50 placeholder-slate-500 focus:border-gold-500/50 focus:outline-none focus:ring-1 focus:ring-gold-500/50"
+              className="mt-2 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]/80 px-4 py-3 text-[var(--color-text)] placeholder-[var(--color-muted)]/60 focus:border-[var(--color-primary)]/50 focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]/50"
               placeholder="you@example.com"
             />
             {errors.email && (
@@ -123,7 +126,7 @@ export function RSVPForm() {
           <div>
             <label
               htmlFor="phone"
-              className="block text-sm font-medium text-slate-300"
+              className="block text-sm font-medium text-[var(--color-muted)]"
             >
               Phone
             </label>
@@ -131,13 +134,13 @@ export function RSVPForm() {
               id="phone"
               type="tel"
               {...register("phone")}
-              className="mt-2 w-full rounded-xl border border-white/10 bg-ink-900/80 px-4 py-3 text-champagne-50 placeholder-slate-500 focus:border-gold-500/50 focus:outline-none focus:ring-1 focus:ring-gold-500/50"
+              className="mt-2 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]/80 px-4 py-3 text-[var(--color-text)] placeholder-[var(--color-muted)]/60 focus:border-[var(--color-primary)]/50 focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]/50"
               placeholder="(555) 123-4567"
             />
           </div>
 
           <div>
-            <span className="block text-sm font-medium text-slate-300">
+            <span className="block text-sm font-medium text-[var(--color-muted)]">
               Will you be attending? *
             </span>
             <div className="mt-2 flex gap-6">
@@ -146,18 +149,18 @@ export function RSVPForm() {
                   type="radio"
                   value="yes"
                   {...register("attending", { required: "Required" })}
-                  className="h-4 w-4 border-white/20 text-gold-500 focus:ring-gold-500"
+                  className="h-4 w-4 border-[var(--color-border)] text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
                 />
-                <span className="text-slate-300">Yes</span>
+                <span className="text-[var(--color-text)]">Yes</span>
               </label>
               <label className="flex cursor-pointer items-center gap-2">
                 <input
                   type="radio"
                   value="no"
                   {...register("attending", { required: "Required" })}
-                  className="h-4 w-4 border-white/20 text-gold-500 focus:ring-gold-500"
+                  className="h-4 w-4 border-[var(--color-border)] text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
                 />
-                <span className="text-slate-300">No</span>
+                <span className="text-[var(--color-text)]">No</span>
               </label>
             </div>
             {errors.attending && (
@@ -167,10 +170,10 @@ export function RSVPForm() {
 
           {attending === "yes" && (
             <div>
-              <label
-                htmlFor="guestCount"
-                className="block text-sm font-medium text-slate-300"
-              >
+            <label
+              htmlFor="guestCount"
+              className="block text-sm font-medium text-[var(--color-muted)]"
+            >
                 Number of Guests *
               </label>
               <select
@@ -179,7 +182,7 @@ export function RSVPForm() {
                   required: attending === "yes" ? "Required" : false,
                   valueAsNumber: true,
                 })}
-                className="mt-2 w-full rounded-xl border border-white/10 bg-ink-900/80 px-4 py-3 text-champagne-50 focus:border-gold-500/50 focus:outline-none focus:ring-1 focus:ring-gold-500/50"
+                className="mt-2 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]/80 px-4 py-3 text-[var(--color-text)] focus:border-[var(--color-primary)]/50 focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]/50"
               >
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
                   <option key={n} value={n}>
@@ -195,16 +198,16 @@ export function RSVPForm() {
 
           {attending === "yes" && (
             <div>
-              <label
-                htmlFor="plusOneName"
-                className="block text-sm font-medium text-slate-300"
-              >
+            <label
+              htmlFor="plusOneName"
+              className="block text-sm font-medium text-[var(--color-muted)]"
+            >
                 Plus One Name (if applicable)
               </label>
               <input
                 id="plusOneName"
                 {...register("plusOneName")}
-                className="mt-2 w-full rounded-xl border border-white/10 bg-ink-900/80 px-4 py-3 text-champagne-50 placeholder-slate-500 focus:border-gold-500/50 focus:outline-none focus:ring-1 focus:ring-gold-500/50"
+                className="mt-2 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]/80 px-4 py-3 text-[var(--color-text)] placeholder-[var(--color-muted)]/60 focus:border-[var(--color-primary)]/50 focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]/50"
                 placeholder="Guest name"
               />
             </div>
@@ -213,7 +216,7 @@ export function RSVPForm() {
           <div>
             <label
               htmlFor="message"
-              className="block text-sm font-medium text-slate-300"
+              className="block text-sm font-medium text-[var(--color-muted)]"
             >
               Message to the Couple
             </label>
@@ -221,7 +224,7 @@ export function RSVPForm() {
               id="message"
               rows={4}
               {...register("message")}
-              className="mt-2 w-full rounded-xl border border-white/10 bg-ink-900/80 px-4 py-3 text-champagne-50 placeholder-slate-500 focus:border-gold-500/50 focus:outline-none focus:ring-1 focus:ring-gold-500/50"
+              className="mt-2 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]/80 px-4 py-3 text-[var(--color-text)] placeholder-[var(--color-muted)]/60 focus:border-[var(--color-primary)]/50 focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]/50"
               placeholder="Leave a note..."
             />
           </div>
@@ -229,7 +232,7 @@ export function RSVPForm() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full rounded-xl bg-gold-500 py-4 font-serif text-sm uppercase tracking-[0.2em] text-ink-900 transition hover:bg-gold-400 disabled:opacity-70"
+            className="w-full rounded-xl bg-[var(--color-primary)] py-4 font-serif text-sm uppercase tracking-[0.2em] text-[var(--color-button-text)] transition opacity-90 hover:opacity-100 disabled:opacity-70"
           >
             {isSubmitting ? "Sending..." : "Submit RSVP"}
           </button>
