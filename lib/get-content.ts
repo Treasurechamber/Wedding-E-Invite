@@ -7,11 +7,20 @@ export async function getWeddingContent(weddingId = "default") {
   if (!url || !key) return null;
 
   const supabase = createClient(url, key);
-  const { data } = await supabase
+  let { data } = await supabase
     .from("wedding_content")
     .select("data")
     .eq("id", weddingId)
     .maybeSingle();
+
+  if (!data?.data && weddingId === "default") {
+    const { data: first } = await supabase
+      .from("wedding_content")
+      .select("data")
+      .limit(1)
+      .maybeSingle();
+    data = first;
+  }
 
   return (data?.data as { coupleNames?: string } | null) ?? null;
 }

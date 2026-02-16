@@ -45,29 +45,14 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const slug = useMemo(() => getWeddingSlug(pathname), [pathname]);
 
+  // Always use API (server-side) so content comes from correct Supabase project
   const fetchContent = useMemo(() => {
     return async () => {
       if (!slug) return;
-      if (!supabase) {
-        fetch(`/api/content?wedding=${slug}&t=${Date.now()}`)
-          .then((r) => r.json())
-          .then((data) => setContent({ ...defaultContent, ...data }))
-          .catch(() => {});
-        return;
-      }
-      const { data, error } = await supabase
-        .from("wedding_content")
-        .select("data")
-        .eq("id", slug)
-        .maybeSingle();
-      if (!error && data?.data) {
-        setContent({ ...defaultContent, ...(data.data as object) });
-      } else {
-        fetch(`/api/content?wedding=${slug}&t=${Date.now()}`)
-          .then((r) => r.json())
-          .then((apiData) => setContent({ ...defaultContent, ...apiData }))
-          .catch(() => {});
-      }
+      fetch(`/api/content?wedding=${slug}&t=${Date.now()}`)
+        .then((r) => r.json())
+        .then((data) => setContent({ ...defaultContent, ...data }))
+        .catch(() => {});
     };
   }, [slug]);
 

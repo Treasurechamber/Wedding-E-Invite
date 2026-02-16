@@ -66,11 +66,23 @@ export async function GET(request: Request) {
   // Use service role to read (bypasses RLS) so content always loads
   const key = supabaseServiceKey || supabaseAnonKey;
   const supabase = createClient(supabaseUrl, key);
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("wedding_content")
     .select("data")
     .eq("id", weddingId)
     .maybeSingle();
+
+  // When "default" (or any ID) doesn't exist, use first wedding in DB
+  if ((error || !data?.data) && weddingId === "default") {
+    const { data: first } = await supabase
+      .from("wedding_content")
+      .select("data")
+      .limit(1)
+      .maybeSingle();
+    if (first?.data) {
+      return NextResponse.json(first.data, { headers: NO_CACHE });
+    }
+  }
 
   if (error || !data?.data) {
     return NextResponse.json(
